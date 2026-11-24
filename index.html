@@ -1,0 +1,2923 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CPE 연금상담 시뮬레이터 | 일반계좌 vs 연금저축 정밀 세금·건보료 비교</title>
+  <!-- Pretendard Font CDN -->
+  <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Pretendard', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'Roboto', 'Noto Sans KR', 'sans-serif'],
+          },
+          colors: {
+            navy: '#0F172A',
+            alabaster: '#F8FAFC',
+            pension: {
+              50: '#ECFDF5',
+              100: '#D1FAE5',
+              500: '#10B981',
+              600: '#059669',
+              700: '#047857',
+            },
+            general: {
+              50: '#EFF6FF',
+              100: '#DBEAFE',
+              500: '#3B82F6',
+              600: '#2563EB',
+              700: '#1D4ED8',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* Base typography & smooth touch scrolling */
+    html, body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Noto Sans KR', sans-serif;
+      background-color: #F8FAFC;
+      color: #0F172A;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Custom subtle scrollbars for iPad/Desktop split panels */
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+
+    /* Touch-friendly range slider styling */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 8px;
+      border-radius: 9999px;
+      background: #E2E8F0;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0F172A;
+      border: 3px solid #FFFFFF;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+      cursor: pointer;
+      transition: transform 0.12s ease, background-color 0.12s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:active {
+      transform: scale(1.12);
+      background: #059669;
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0F172A;
+      border: 3px solid #FFFFFF;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.25);
+      cursor: pointer;
+    }
+
+    /* Hide number input spinners for cleaner numeric boxes */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+
+    /* Tabular numbers for aligned financial tables & KPIs */
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Print / PDF Consultation Report Styles */
+    @media print {
+      @page {
+        size: A4 landscape;
+        margin: 10mm;
+      }
+      body {
+        background: #FFFFFF !important;
+        overflow: visible !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-layout {
+        display: block !important;
+        height: auto !important;
+        overflow: visible !important;
+      }
+      .print-panel {
+        height: auto !important;
+        overflow: visible !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0 !important;
+      }
+      .print-summary-bar {
+        display: grid !important;
+      }
+      .print-break-inside-avoid {
+        break-inside: avoid;
+        page-break-inside: avoid;
+      }
+      .print-table-wrap {
+        max-height: none !important;
+        overflow: visible !important;
+      }
+      canvas {
+        max-height: 280px !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-alabaster text-slate-900 min-h-screen flex flex-col lg:h-screen lg:overflow-hidden">
+
+  <!-- Top Navigation Header -->
+  <header class="bg-navy text-white h-16 px-4 lg:px-6 flex items-center justify-between shadow-md shrink-0 z-30">
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-inner shrink-0">
+        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+        </svg>
+      </div>
+      <div class="truncate">
+        <div class="flex items-center gap-2">
+          <h1 class="text-base sm:text-lg font-bold tracking-tight truncate">CPE 연금상담 시뮬레이터</h1>
+          <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">2026 세법·건보료 반영</span>
+        </div>
+        <p class="text-xs text-slate-300 truncate">일반계좌 vs 연금저축계좌 · 자산군별 과세 · 건강보험료 정밀 비교</p>
+      </div>
+    </div>
+
+    <!-- Header Action Buttons -->
+    <div class="flex items-center gap-2 shrink-0 no-print">
+      <button id="btnOpenScenarioModal" type="button" class="h-10 px-3 sm:px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-100 text-xs sm:text-sm font-medium flex items-center gap-1.5 border border-slate-700 transition">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0z" />
+        </svg>
+        <span class="hidden md:inline">시나리오 저장/불러오기</span>
+        <span class="md:hidden">저장</span>
+        <span id="savedCountBadge" class="ml-0.5 px-1.5 py-0.2 rounded-full text-[11px] bg-emerald-600 text-white font-bold hidden">0</span>
+      </button>
+
+      <button id="btnResetAll" type="button" class="h-10 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-200 text-xs sm:text-sm font-medium flex items-center gap-1.5 border border-slate-700 transition">
+        <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+        </svg>
+        <span class="hidden sm:inline">초기화</span>
+      </button>
+
+      <button id="btnPrintReport" type="button" class="h-10 px-3 sm:px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white text-xs sm:text-sm font-semibold flex items-center gap-1.5 shadow-sm transition">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0110.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0l.229 2.523a1.125 1.125 0 01-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0021 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 00-1.913-.247M6.34 18H5.25A2.25 2.25 0 013 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 011.913-.247m10.5 0a48.536 48.536 0 00-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5zm-3 0h.008v.008H15V10.5z" />
+        </svg>
+        <span class="hidden sm:inline">상담 리포트 인쇄(PDF)</span>
+        <span class="sm:hidden">PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Print-Only Client Condition Summary Banner -->
+  <div id="printSummaryBar" class="hidden print-summary-bar grid-cols-4 gap-3 px-4 py-3 mb-4 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+    <!-- Populated dynamically before render -->
+  </div>
+
+  <!-- Main Workspace: Split Two-Column Layout on iPad Pro Landscape (1024px+) -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-[415px_1fr] lg:h-[calc(100vh-4rem)] lg:overflow-hidden print-layout">
+
+    <!-- ==================== LEFT PANEL: INPUT CONTROLS ==================== -->
+    <aside class="bg-slate-50/80 border-b lg:border-b-0 lg:border-r border-slate-200 lg:overflow-y-auto custom-scroll p-3.5 sm:p-4 space-y-3.5 no-print">
+
+      <!-- CARD 1: 상담 대상자 프리셋 -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <button type="button" data-collapse="card1Body" class="w-full px-4 py-3.5 flex items-center justify-between bg-white hover:bg-slate-50 transition text-left">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-navy text-white text-xs font-bold flex items-center justify-center">1</span>
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">상담 대상자 프리셋 &amp; 세액공제</h2>
+              <p class="text-[11px] text-slate-500">원터치 고객 유형 선택 및 세액공제 조건</p>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 rotate-180" data-chevron="card1Body" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+
+        <div id="card1Body" class="px-4 pb-4 pt-1 border-t border-slate-100 space-y-3.5">
+          <!-- 4 One-Tap Client Profiles -->
+          <div class="grid grid-cols-2 gap-2 pt-2">
+            <button type="button" data-profile="workerHigh" class="profile-btn min-h-[52px] px-2.5 py-2 rounded-xl border text-left transition flex flex-col justify-center">
+              <span class="text-xs font-bold leading-tight">직장인 (5,500만 초과)</span>
+              <span class="text-[11px] opacity-80 mt-0.5">세액공제 13.2% · 600만</span>
+            </button>
+            <button type="button" data-profile="workerLow" class="profile-btn min-h-[52px] px-2.5 py-2 rounded-xl border text-left transition flex flex-col justify-center">
+              <span class="text-xs font-bold leading-tight">직장인 (5,500만 이하)</span>
+              <span class="text-[11px] opacity-80 mt-0.5">세액공제 16.5% · 600만</span>
+            </button>
+            <button type="button" data-profile="housewife" class="profile-btn min-h-[52px] px-2.5 py-2 rounded-xl border text-left transition flex flex-col justify-center">
+              <span class="text-xs font-bold leading-tight">전업주부 · 피부양자</span>
+              <span class="text-[11px] opacity-80 mt-0.5">세액공제 0% · 원금비과세</span>
+            </button>
+            <button type="button" data-profile="wealthy" class="profile-btn min-h-[52px] px-2.5 py-2 rounded-xl border text-left transition flex flex-col justify-center">
+              <span class="text-xs font-bold leading-tight">자산가 · 혼합납입</span>
+              <span class="text-[11px] opacity-80 mt-0.5">거치 5천 + 연 1,800만</span>
+            </button>
+          </div>
+
+          <!-- Tax Credit Rate & Limit Fine-Tuning -->
+          <div class="grid grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1.5">세액공제율</label>
+              <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl">
+                <button type="button" data-tax-rate="0" class="tax-rate-btn h-9 rounded-lg text-xs font-semibold transition">0%</button>
+                <button type="button" data-tax-rate="13.2" class="tax-rate-btn h-9 rounded-lg text-xs font-semibold transition">13.2%</button>
+                <button type="button" data-tax-rate="16.5" class="tax-rate-btn h-9 rounded-lg text-xs font-semibold transition">16.5%</button>
+              </div>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1.5">세액공제 연간 한도</label>
+              <div class="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl">
+                <button type="button" data-tax-limit="0" class="tax-limit-btn h-9 rounded-lg text-xs font-semibold transition">없음</button>
+                <button type="button" data-tax-limit="600" class="tax-limit-btn h-9 rounded-lg text-xs font-semibold transition">600만</button>
+                <button type="button" data-tax-limit="900" class="tax-limit-btn h-9 rounded-lg text-[11px] font-semibold transition" title="연금저축 600만 + IRP 300만 합산">900만</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reinvest Tax Credit Refund Toggle -->
+          <div class="flex items-center justify-between gap-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl px-3 py-2.5">
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-emerald-950">세액공제 환급금 재투자 반영</div>
+              <div id="taxCreditSubLabel" class="text-[11px] text-emerald-700 mt-0.5">연 예상 환급액: 79만 원 (누적 별도표시)</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer shrink-0">
+              <input id="toggleReinvestRefund" type="checkbox" class="sr-only peer" checked />
+              <div class="w-12 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-[22px] after:w-[22px] after:shadow after:transition-all peer-checked:bg-emerald-600"></div>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- CARD 2: 납입 및 운용 조건 -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <button type="button" data-collapse="card2Body" class="w-full px-4 py-3.5 flex items-center justify-between bg-white hover:bg-slate-50 transition text-left">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-navy text-white text-xs font-bold flex items-center justify-center">2</span>
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">납입 및 운용 조건 (적립기)</h2>
+              <p class="text-[11px] text-slate-500">거치금 · 연간 적립금 · 기간 · 기대수익률</p>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 rotate-180" data-chevron="card2Body" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+
+        <div id="card2Body" class="px-4 pb-4 pt-2 border-t border-slate-100 space-y-4">
+          <!-- 초기 일시납 (거치금) -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="inputLumpSum" class="text-xs font-bold text-slate-700">초기 거치금 (일시납)</label>
+              <div class="flex items-center gap-1">
+                <button type="button" data-step="lumpSum:-1000" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center justify-center">-</button>
+                <div class="relative">
+                  <input id="inputLumpSum" type="number" min="0" max="50000" step="100" value="0" class="w-24 h-8 px-2 pr-8 text-right text-sm font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500 tabular-nums" />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-500 font-medium">만원</span>
+                </div>
+                <button type="button" data-step="lumpSum:1000" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center justify-center">+</button>
+              </div>
+            </div>
+            <input id="sliderLumpSum" type="range" min="0" max="50000" step="500" value="0" class="w-full" />
+            <div class="flex justify-between text-[10px] text-slate-400">
+              <span>0원</span><span>1억</span><span>2.5억</span><span>5억 원</span>
+            </div>
+
+            <!-- Initial Lump Sum Tax Status (Shown when lumpSum > 0) -->
+            <div id="lumpSumTypeBox" class="hidden mt-2 p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+              <div class="text-[11px] font-semibold text-slate-600">초기 거치금의 연금계좌 세무 성격</div>
+              <div class="grid grid-cols-2 gap-1.5">
+                <button type="button" data-lump-type="nonDeducted" class="lump-type-btn h-9 px-2 rounded-lg text-[11px] font-semibold border transition">미공제 원금 (주부/ISA전환)</button>
+                <button type="button" data-lump-type="deducted" class="lump-type-btn h-9 px-2 rounded-lg text-[11px] font-semibold border transition">기존 세액공제 적립금</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 연간 적립금 -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="inputAnnualContrib" class="text-xs font-bold text-slate-700">연간 적립금 (매년 납입)</label>
+              <div class="flex items-center gap-1">
+                <button type="button" data-step="annualContribution:-100" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center justify-center">-</button>
+                <div class="relative">
+                  <input id="inputAnnualContrib" type="number" min="0" max="3000" step="100" value="600" class="w-24 h-8 px-2 pr-8 text-right text-sm font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-500 tabular-nums" />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-500 font-medium">만원</span>
+                </div>
+                <button type="button" data-step="annualContribution:100" class="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm flex items-center justify-center">+</button>
+              </div>
+            </div>
+            <input id="sliderAnnualContrib" type="range" min="0" max="3000" step="100" value="600" class="w-full" />
+            <div class="flex items-center justify-between text-[10px] text-slate-400">
+              <span>0원</span><span>600만</span><span>1,800만 (법정한도)</span><span>3,000만</span>
+            </div>
+            <div id="annualLimitWarning" class="hidden px-2.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 text-[11px] flex items-start gap-1.5">
+              <span class="font-bold shrink-0">주의:</span>
+              <span>연금저축+IRP 합산 연간 법정 납입한도는 <b>1,800만 원</b>입니다. 초과 납입은 부부 분산 또는 ISA 만기전환(한도 외)을 가정한 시뮬레이션입니다.</span>
+            </div>
+          </div>
+
+          <!-- 현재 나이 & 적립(운용) 기간 -->
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label for="inputCurrentAge" class="text-xs font-bold text-slate-700">현재 나이</label>
+                <span class="text-xs font-bold text-navy tabular-nums"><span id="labelCurrentAge">45</span>세</span>
+              </div>
+              <input id="sliderCurrentAge" type="range" min="25" max="70" step="1" value="45" class="w-full" />
+              <div class="flex justify-between text-[10px] text-slate-400"><span>25세</span><span>70세</span></div>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label for="sliderAccYears" class="text-xs font-bold text-slate-700">운용 기간</label>
+                <span class="text-xs font-bold text-navy tabular-nums"><span id="labelAccYears">15</span>년</span>
+              </div>
+              <input id="sliderAccYears" type="range" min="1" max="35" step="1" value="15" class="w-full" />
+              <div class="flex justify-between text-[10px] text-slate-400"><span>1년</span><span>35년</span></div>
+            </div>
+          </div>
+
+          <!-- Auto-calculated Start Age Banner -->
+          <div id="startAgeBanner" class="flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100 text-xs">
+            <span class="text-slate-600 font-medium">연금 개시(인출 시작) 나이</span>
+            <span id="labelStartAge" class="font-bold text-slate-900 tabular-nums">만 60세</span>
+          </div>
+
+          <!-- 연간 기대수익률 (공통 적용) -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="sliderAccReturn" class="text-xs font-bold text-slate-700">연간 기대수익률 <span class="font-normal text-slate-500">(양 계좌 동일)</span></label>
+              <span class="px-2 py-0.5 rounded-lg bg-emerald-50 text-emerald-700 text-sm font-extrabold tabular-nums"><span id="labelAccReturn">7.0</span>%</span>
+            </div>
+            <input id="sliderAccReturn" type="range" min="0" max="15" step="0.5" value="7.0" class="w-full" />
+            <div class="flex justify-between text-[10px] text-slate-400">
+              <span>0%</span><span>4%</span><span>7%</span><span>10%</span><span>15%</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CARD 3: 투자 상품 포트폴리오 비중 -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <button type="button" data-collapse="card3Body" class="w-full px-4 py-3.5 flex items-center justify-between bg-white hover:bg-slate-50 transition text-left">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-navy text-white text-xs font-bold flex items-center justify-center">3</span>
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">투자 상품 포트폴리오 비중</h2>
+              <p class="text-[11px] text-slate-500">5개 상품군별 일반계좌 과세 구조 자동 반영</p>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 rotate-180" data-chevron="card3Body" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+
+        <div id="card3Body" class="px-4 pb-4 pt-2 border-t border-slate-100 space-y-3">
+          <!-- Portfolio Quick Presets -->
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" data-port-preset="overseas100" class="port-preset-btn h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition">해외ETF 100%</button>
+            <button type="button" data-port-preset="domestic100" class="port-preset-btn h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition">국내ETF 100%(역전)</button>
+            <button type="button" data-port-preset="global6040" class="port-preset-btn h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition">글로벌 60/40</button>
+            <button type="button" data-port-preset="dividendBond" class="port-preset-btn h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition">은퇴 배당·채권형</button>
+            <button type="button" data-port-preset="equal5" class="port-preset-btn h-8 px-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition">5종 균등</button>
+          </div>
+
+          <!-- Total Weight Progress Bar & Auto-Fit -->
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5 space-y-1.5">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-slate-700">합계 비중:</span>
+                <span id="labelWeightSum" class="text-sm font-extrabold text-emerald-600 tabular-nums">100%</span>
+                <span id="weightSumStatus" class="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700">정상</span>
+              </div>
+              <button id="btnAutoFitWeights" type="button" class="h-7 px-2.5 rounded-lg bg-navy hover:bg-slate-800 text-white text-[11px] font-semibold transition">100% 자동맞춤</button>
+            </div>
+            <div class="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+              <div id="weightProgressBar" class="h-full bg-emerald-500 transition-all duration-200" style="width: 100%"></div>
+            </div>
+          </div>
+
+          <!-- 5 Asset Class Sliders -->
+          <div id="assetSlidersContainer" class="space-y-3">
+            <!-- Generated cleanly via JS for tight two-way binding -->
+          </div>
+
+          <!-- Direct Bond Checkbox -->
+          <label class="flex items-center gap-2.5 p-2.5 rounded-xl bg-blue-50/70 border border-blue-100 cursor-pointer">
+            <input id="chkDirectBond" type="checkbox" class="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600" />
+            <span class="text-[11px] font-medium text-blue-900 leading-snug">
+              <b>개별 채권 직접투자 가정</b> (일반계좌 매매차익 비과세 · 이자만 15.4% 과세)
+            </span>
+          </label>
+
+          <!-- Accordion: 세부 분배금(배당·이자) 비율 조정 -->
+          <div class="border border-slate-200 rounded-xl overflow-hidden">
+            <button type="button" data-collapse="divShareAccordion" class="w-full px-3 py-2.5 bg-slate-50 hover:bg-slate-100 flex items-center justify-between text-xs font-semibold text-slate-700 transition">
+              <span>세부 분배금(배당·이자) 비중 조정 (고급)</span>
+              <svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-200" data-chevron="divShareAccordion" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </button>
+            <div id="divShareAccordion" class="hidden px-3 py-2.5 bg-white border-t border-slate-100 space-y-2.5">
+              <p class="text-[11px] text-slate-500">기대수익률 중 매년 분배금(배당·이자)으로 지급되어 일반계좌에서 15.4% 원천징수되는 비율입니다.</p>
+              <div id="divShareSlidersContainer" class="space-y-2"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CARD 4: 인출(연금 수령) 및 건보료 조건 -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <button type="button" data-collapse="card4Body" class="w-full px-4 py-3.5 flex items-center justify-between bg-white hover:bg-slate-50 transition text-left">
+          <div class="flex items-center gap-2.5">
+            <span class="w-6 h-6 rounded-lg bg-navy text-white text-xs font-bold flex items-center justify-center">4</span>
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">인출(연금 수령) &amp; 건보료 조건</h2>
+              <p class="text-[11px] text-slate-500">수령기간 · 방식 · 은퇴 후 건보유형 · 타 소득</p>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-slate-400 transition-transform duration-200 rotate-180" data-chevron="card4Body" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+
+        <div id="card4Body" class="px-4 pb-4 pt-2 border-t border-slate-100 space-y-4">
+          <!-- 인출 기간 -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="sliderPayoutYears" class="text-xs font-bold text-slate-700">연금 인출 기간</label>
+              <span class="text-sm font-extrabold text-navy tabular-nums"><span id="labelPayoutYears">15</span>년간</span>
+            </div>
+            <input id="sliderPayoutYears" type="range" min="5" max="30" step="1" value="15" class="w-full" />
+            <div class="grid grid-cols-4 gap-1.5">
+              <button type="button" data-payout-yr="10" class="payout-yr-btn h-8 rounded-lg text-xs font-semibold border transition">10년</button>
+              <button type="button" data-payout-yr="15" class="payout-yr-btn h-8 rounded-lg text-xs font-semibold border transition">15년</button>
+              <button type="button" data-payout-yr="20" class="payout-yr-btn h-8 rounded-lg text-xs font-semibold border transition">20년</button>
+              <button type="button" data-payout-yr="25" class="payout-yr-btn h-8 rounded-lg text-xs font-semibold border transition">25년</button>
+            </div>
+          </div>
+
+          <!-- 인출 방식 Toggle -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700">인출 방식</label>
+            <div class="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl">
+              <button type="button" data-payout-mode="equal" class="payout-mode-btn h-10 px-2 rounded-lg text-xs font-semibold transition">기간 균등 인출<br><span class="text-[10px] font-normal opacity-80">(만기 잔액 0원)</span></button>
+              <button type="button" data-payout-mode="fixed" class="payout-mode-btn h-10 px-2 rounded-lg text-xs font-semibold transition">목표 인출액 지정<br><span class="text-[10px] font-normal opacity-80">(연 세전 금액 고정)</span></button>
+            </div>
+
+            <!-- Fixed Target Annual Withdrawal Input -->
+            <div id="fixedWithdrawalBox" class="hidden p-2.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label for="inputTargetWithdrawal" class="text-xs font-bold text-slate-700">연간 목표 세전 인출액</label>
+                <div class="relative">
+                  <input id="inputTargetWithdrawal" type="number" min="300" max="15000" step="100" value="1800" class="w-24 h-8 px-2 pr-8 text-right text-sm font-bold text-slate-900 bg-white border border-slate-300 rounded-lg tabular-nums" />
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-500">만원</span>
+                </div>
+              </div>
+              <input id="sliderTargetWithdrawal" type="range" min="300" max="8000" step="100" value="1800" class="w-full" />
+              <div class="flex justify-between text-[10px] text-slate-400"><span>300만</span><span>1,500만(저율한도)</span><span>4,000만</span><span>8,000만</span></div>
+            </div>
+          </div>
+
+          <!-- 인출기 기대수익률 -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-700">인출기 기대수익률</span>
+              <label class="inline-flex items-center gap-1.5 cursor-pointer">
+                <input id="chkSamePayoutReturn" type="checkbox" checked class="w-4 h-4 accent-emerald-600 rounded" />
+                <span class="text-xs font-medium text-slate-600">적립기와 동일 (<span id="labelMirrorAccReturn">7.0</span>%)</span>
+              </label>
+            </div>
+            <div id="customPayoutReturnBox" class="hidden space-y-1 p-2.5 bg-slate-50 border border-slate-200 rounded-xl">
+              <div class="flex justify-between text-xs">
+                <span class="text-slate-600 font-medium">인출기 별도 수익률</span>
+                <span class="font-bold text-emerald-700 tabular-nums"><span id="labelPayoutReturn">4.5</span>%</span>
+              </div>
+              <input id="sliderPayoutReturn" type="range" min="0" max="12" step="0.5" value="4.5" class="w-full" />
+            </div>
+          </div>
+
+          <!-- 은퇴 후 건강보험 유형 -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-bold text-slate-700">은퇴 후 건강보험 가입 유형 <span class="text-[11px] font-normal text-slate-500">(2026년 8.1348%)</span></label>
+            <div class="grid grid-cols-3 gap-1.5 bg-slate-100 p-1 rounded-xl">
+              <button type="button" data-nhis="dependent" class="nhis-btn h-10 rounded-lg text-xs font-semibold transition">피부양자<span class="block text-[10px] font-normal opacity-80">주부·은퇴자</span></button>
+              <button type="button" data-nhis="regional" class="nhis-btn h-10 rounded-lg text-xs font-semibold transition">지역가입자<span class="block text-[10px] font-normal opacity-80">은퇴 세대주</span></button>
+              <button type="button" data-nhis="employee" class="nhis-btn h-10 rounded-lg text-xs font-semibold transition">직장가입자<span class="block text-[10px] font-normal opacity-80">계속근로</span></button>
+            </div>
+          </div>
+
+          <!-- 은퇴 후 타 종합소득 -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label for="inputOtherIncome" class="text-xs font-bold text-slate-700">은퇴 후 타 종합소득 <span class="font-normal text-slate-500">(국민연금 등)</span></label>
+              <div class="relative">
+                <input id="inputOtherIncome" type="number" min="0" max="10000" step="100" value="2000" class="w-24 h-8 px-2 pr-8 text-right text-sm font-bold text-slate-900 bg-slate-50 border border-slate-300 rounded-lg tabular-nums" />
+                <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-slate-500">만원</span>
+              </div>
+            </div>
+            <input id="sliderOtherIncome" type="range" min="0" max="10000" step="100" value="2000" class="w-full" />
+            <div class="flex justify-between text-[10px] text-slate-400"><span>0원</span><span>2,000만(피부양자 기준)</span><span>5,000만</span><span>1억 원</span></div>
+          </div>
+
+          <!-- 사적연금 연 1,500만 원 초과 시 과세방식 -->
+          <div class="space-y-1.5">
+            <label for="selectExcessTaxMode" class="block text-xs font-bold text-slate-700">사적연금 연 1,500만 원 초과 시 과세방식</label>
+            <select id="selectExcessTaxMode" class="w-full h-10 px-3 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold text-slate-800 focus:outline-none focus:border-emerald-500">
+              <option value="auto">자동 최적화 (종합과세 vs 16.5% 분리과세 중 유리한 쪽)</option>
+              <option value="separate">16.5% 분리과세 고정</option>
+              <option value="comprehensive">종합소득세 합산과세 고정</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <div class="text-center text-[11px] text-slate-400 pb-4">
+        본 시뮬레이터는 2026년 세법 및 건강보험료율 기준 상담 참고용입니다.
+      </div>
+    </aside>
+
+    <!-- ==================== RIGHT PANEL: CONSULTATION DASHBOARD ==================== -->
+    <section class="lg:overflow-y-auto custom-scroll p-3.5 sm:p-5 lg:p-6 space-y-5 print-panel">
+
+      <!-- 1. DYNAMIC VERDICT HERO CARD -->
+      <div id="verdictCard" class="rounded-2xl border shadow-sm p-4 sm:p-5 transition-colors duration-200 print-break-inside-avoid">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3.5">
+          <div class="flex items-start gap-3">
+            <div id="verdictIconWrap" class="w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm">
+              <!-- SVG dynamically updated -->
+            </div>
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span id="verdictBadge" class="px-2.5 py-0.5 rounded-full text-xs font-bold tracking-tight">CPE 상담 핵심 진단</span>
+                <span id="verdictSubTag" class="text-xs font-semibold text-slate-500"></span>
+              </div>
+              <h2 id="verdictHeadline" class="text-lg sm:text-xl font-extrabold tracking-tight text-slate-900 mt-1">계산 중...</h2>
+            </div>
+          </div>
+          <div id="verdictMetricBox" class="shrink-0 px-3.5 py-2 rounded-xl bg-white/90 border border-slate-200/80 text-right shadow-xs">
+            <div class="text-[11px] font-semibold text-slate-500">계좌 순수 비교 (환급 제외)</div>
+            <div id="verdictPureDiff" class="text-sm font-extrabold tabular-nums text-slate-900 mt-0.5">-</div>
+          </div>
+        </div>
+
+        <!-- 3 Dynamic CPE Diagnostic Bullets -->
+        <div id="diagnosticBullets" class="grid grid-cols-1 md:grid-cols-3 gap-2.5">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- 2. 4 COMPARISON KPI CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5 print-break-inside-avoid">
+        <!-- KPI 1: 은퇴시점 계좌잔액 -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-500">은퇴시점 계좌잔액</span>
+            <span id="kpi1AgeBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">만 60세</span>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-semibold text-emerald-700 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>연금저축</span>
+              <span id="kpiPenRetireBal" class="text-base font-extrabold text-slate-900 tabular-nums">-</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-semibold text-blue-700 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span>일반계좌</span>
+              <span id="kpiGenRetireBal" class="text-base font-bold text-slate-700 tabular-nums">-</span>
+            </div>
+          </div>
+          <div id="kpiRetireDiff" class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-semibold text-emerald-700 tabular-nums">-</div>
+        </div>
+
+        <!-- KPI 2: 인출기간 총 세후 실수령액 -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-500">총 세후 실수령액</span>
+            <span id="kpi2YearsBadge" class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">15년 합계</span>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-semibold text-emerald-700 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>연금저축</span>
+              <span id="kpiPenNetTotal" class="text-base font-extrabold text-slate-900 tabular-nums">-</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-semibold text-blue-700 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span>일반계좌</span>
+              <span id="kpiGenNetTotal" class="text-base font-bold text-slate-700 tabular-nums">-</span>
+            </div>
+          </div>
+          <div id="kpiRefundNote" class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-semibold text-slate-600 tabular-nums">-</div>
+        </div>
+
+        <!-- KPI 3: 총 세금 + 추가 건보료 -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-500">총 세금 + 추가 건보료</span>
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700">누수비용</span>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-semibold text-emerald-700 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>연금저축</span>
+              <span id="kpiPenLeakTotal" class="text-base font-extrabold text-slate-900 tabular-nums">-</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-semibold text-blue-700 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span>일반계좌</span>
+              <span id="kpiGenLeakTotal" class="text-base font-bold text-rose-600 tabular-nums">-</span>
+            </div>
+          </div>
+          <div id="kpiLeakDiff" class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-semibold text-emerald-700 tabular-nums">-</div>
+        </div>
+
+        <!-- KPI 4: 월평균 세후 현금흐름 -->
+        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm flex flex-col justify-between">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-500">월평균 세후 생활비</span>
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700">월 현금흐름</span>
+          </div>
+          <div class="space-y-2">
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-semibold text-emerald-700 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>연금저축</span>
+              <span id="kpiPenMonthly" class="text-base font-extrabold text-slate-900 tabular-nums">-</span>
+            </div>
+            <div class="flex items-baseline justify-between">
+              <span class="text-xs font-semibold text-blue-700 flex items-center gap-1.5"><span class="w-2 h-2 rounded-full bg-blue-500"></span>일반계좌</span>
+              <span id="kpiGenMonthly" class="text-base font-bold text-slate-700 tabular-nums">-</span>
+            </div>
+          </div>
+          <div id="kpiMonthlyDiff" class="mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-semibold text-emerald-700 tabular-nums">-</div>
+        </div>
+      </div>
+
+      <!-- 3. INTERACTIVE CHARTS SECTION (3 TABS) -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden print-break-inside-avoid">
+        <div class="px-4 py-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl w-full sm:w-auto overflow-x-auto">
+            <button type="button" data-chart-tab="lifecycle" class="chart-tab-btn flex-1 sm:flex-none h-9 px-3.5 rounded-lg text-xs font-bold transition whitespace-nowrap">자산 성장 &amp; 인출 추이</button>
+            <button type="button" data-chart-tab="cashflow" class="chart-tab-btn flex-1 sm:flex-none h-9 px-3.5 rounded-lg text-xs font-bold transition whitespace-nowrap">연도별 세후 수령·세금·건보료</button>
+            <button type="button" data-chart-tab="breakdown" class="chart-tab-btn flex-1 sm:flex-none h-9 px-3.5 rounded-lg text-xs font-bold transition whitespace-nowrap">세금·건보료 항목별 비교</button>
+          </div>
+          <span id="chartSubtitle" class="text-xs text-slate-500 font-medium">단위: 만 원 (세전/세후 시뮬레이션)</span>
+        </div>
+        <div class="p-4">
+          <div class="relative w-full h-[290px] sm:h-[320px]">
+            <canvas id="mainChartCanvas"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. YEAR-BY-YEAR DETAILED TABLE -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl w-full sm:w-auto">
+            <button type="button" data-table-tab="decumulation" class="table-tab-btn flex-1 sm:flex-none h-9 px-3.5 rounded-lg text-xs font-bold transition">인출기 연도별 상세표</button>
+            <button type="button" data-table-tab="accumulation" class="table-tab-btn flex-1 sm:flex-none h-9 px-3.5 rounded-lg text-xs font-bold transition">적립기 연도별 상세표</button>
+          </div>
+          <div class="text-[11px] text-slate-500 flex flex-wrap items-center gap-2">
+            <span>단위: 만 원</span>
+            <span class="hidden sm:inline text-slate-300">|</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span>연금저축</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-blue-500"></span>일반계좌</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-[420px] overflow-y-auto custom-scroll print-table-wrap">
+          <table class="w-full text-xs text-right border-collapse">
+            <thead id="detailTableHead" class="bg-slate-50 text-slate-600 sticky top-0 z-10 border-b border-slate-200 shadow-[0_1px_0_#E2E8F0]">
+              <!-- Dynamic header -->
+            </thead>
+            <tbody id="detailTableBody" class="divide-y divide-slate-100 tabular-nums">
+              <!-- Dynamic rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 5. COLLAPSIBLE CPE REFERENCE CARD -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden print-break-inside-avoid">
+        <button type="button" data-collapse="cpeGuideBody" class="w-full px-4 py-3.5 flex items-center justify-between bg-slate-50/70 hover:bg-slate-100/70 transition text-left">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              </svg>
+            </span>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">CPE 핵심 세법·건보료 상담 포인트 (2026년 기준)</h3>
+              <p class="text-[11px] text-slate-500">고객 설명용 핵심 규정 요약 · 클릭하여 펼치기/접기</p>
+            </div>
+          </div>
+          <svg class="w-4 h-4 text-slate-400 transition-transform duration-200" data-chevron="cpeGuideBody" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+          </svg>
+        </button>
+
+        <div id="cpeGuideBody" class="hidden p-4 border-t border-slate-100 grid grid-cols-1 md:grid-cols-3 gap-3.5 text-xs">
+          <!-- Point 1 -->
+          <div class="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200/70 space-y-1.5">
+            <h4 class="font-bold text-emerald-900 text-xs">1. 주부·무소득자 '원금 비과세 · 수익 과세'</h4>
+            <p class="text-slate-700 leading-relaxed">
+              세액공제를 받지 않고 납입한 원금은 인출 시 <b>법정 인출 순서상 가장 먼저 비과세(0%)</b>로 빠져나옵니다. 원금이 모두 소진된 뒤 <b>운용수익(배당·매매차익) 구간부터</b> 5.5~3.3% 저율 연금소득세가 부과됩니다.
+            </p>
+            <p class="text-[11px] text-emerald-800 font-medium">※ 단, 연금수령한도(10년차까지 매년 잔액/(11-연차)×120%) 초과 인출 시 과세재원에 16.5% 기타소득세 부과.</p>
+          </div>
+
+          <!-- Point 2 -->
+          <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200/70 space-y-1.5">
+            <h4 class="font-bold text-blue-900 text-xs">2. 상품별 일반계좌 vs 연금저축 과세 차이</h4>
+            <ul class="space-y-1 text-slate-700 leading-relaxed">
+              <li>• <b>국내주식형 ETF</b>: 일반계좌 매매차익 <b>비과세(0%)</b> → 연금계좌는 수익 전체 과세로 역전 가능!</li>
+              <li>• <b>국내상장 해외ETF·채권ETF·리츠</b>: 일반계좌 매매차익·분배금 모두 <b>15.4%</b> 및 금융소득 합산 → 연금저축 과세이연·저율과세 압도적 유리.</li>
+              <li>• <b>개별채권 직접투자</b>: 일반계좌 매매차익 비과세, 이자만 15.4%.</li>
+            </ul>
+          </div>
+
+          <!-- Point 3 -->
+          <div class="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/70 space-y-1.5">
+            <h4 class="font-bold text-amber-900 text-xs">3. 2026년 건강보험료(8.1348%) 핵심 기준</h4>
+            <ul class="space-y-1 text-slate-700 leading-relaxed">
+              <li>• <b>사적연금(연금저축·IRP)</b>: 금액 무관 <b>건보료 0원 (완전 제외)</b>.</li>
+              <li>• <b>피부양자</b>: 금융소득+타소득(국민연금 등) <b>연 2,000만 원 초과 시 피부양자 탈락</b> (지역가입자 전환).</li>
+              <li>• <b>지역가입자</b>: 금융소득 <b>연 1,000만 원 초과 시 전액</b>에 8.1348% 건보료 부과.</li>
+              <li>• <b>직장가입자</b>: 보수외소득 <b>연 2,000만 원 초과분</b>에 8.1348% 부과.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+    </section>
+  </main>
+
+  <!-- ==================== SCENARIO SAVE / LOAD MODAL ==================== -->
+  <div id="scenarioModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 no-print">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-2xl w-full max-w-lg overflow-hidden">
+      <div class="px-5 py-4 bg-navy text-white flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold">상담 시나리오 저장 / 불러오기</h3>
+          <p class="text-xs text-slate-300 mt-0.5">브라우저(기기)에 최대 6개의 고객 케이스를 저장할 수 있습니다.</p>
+        </div>
+        <button id="btnCloseScenarioModal" type="button" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 flex items-center justify-center text-slate-300">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <!-- Save Current Form -->
+        <div class="space-y-2">
+          <label for="inputScenarioName" class="block text-xs font-bold text-slate-700">현재 설정을 새 시나리오로 저장</label>
+          <div class="flex gap-2">
+            <input id="inputScenarioName" type="text" maxlength="30" placeholder="예: 김OO 고객님 (주부 · 해외ETF 1억 거치)" class="flex-1 h-11 px-3.5 rounded-xl border border-slate-300 text-sm focus:outline-none focus:border-emerald-500" />
+            <button id="btnSaveScenario" type="button" class="h-11 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold shrink-0 transition">저장</button>
+          </div>
+        </div>
+
+        <!-- Saved List -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700">저장된 상담 케이스 (<span id="modalSavedCount">0</span>/6)</span>
+            <button id="btnClearAllScenarios" type="button" class="text-xs text-rose-600 hover:underline font-medium">전체 삭제</button>
+          </div>
+          <div id="savedScenarioList" class="space-y-2 max-h-64 overflow-y-auto custom-scroll">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Non-Blocking Toast Notification -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none no-print"></div>
+
+  <!-- ==================== JAVASCRIPT: EXACT 2026 ENGINE & UI ==================== -->
+  <script>
+    (function () {
+      'use strict';
+
+      /* =========================================================================
+       * 1. CONSTANTS & 2026 KOREAN TAX / NHIS RULES
+       * ========================================================================= */
+      const NHIS_RATE_2026 = 0.081348; // 2026년 건강보험료 7.19% + 장기요양보험료 0.9448% (7.19% * 13.14%)
+      const STORAGE_KEY = 'cpe_pension_simulator_scenarios_v2026';
+
+      // 2026년 종합소득세 누진세율표 (지방소득세 10% 포함)
+      const TAX_BRACKETS_2026 = [
+        { limit: 14_000_000,   rate: 0.066, deduction: 0 },
+        { limit: 50_000_000,   rate: 0.165, deduction: 1_386_000 },
+        { limit: 88_000_000,   rate: 0.264, deduction: 6_336_000 },
+        { limit: 150_000_000,  rate: 0.385, deduction: 16_984_000 },
+        { limit: 300_000_000,  rate: 0.418, deduction: 21_934_000 },
+        { limit: 500_000_000,  rate: 0.440, deduction: 28_534_000 },
+        { limit: 1_000_000_000, rate: 0.462, deduction: 39_534_000 },
+        { limit: Infinity,     rate: 0.495, deduction: 72_534_000 },
+      ];
+
+      // 5 Asset Classes Metadata
+      const ASSET_META = [
+        {
+          id: 'domestic',
+          name: '국내 주식형 ETF',
+          taxTag: '매매차익 비과세(0%) · 분배금 15.4%',
+          tagColor: 'bg-blue-50 text-blue-700 border-blue-200',
+          defaultDivShare: 28,
+          taxableGainFactor: 0.0,
+        },
+        {
+          id: 'overseas',
+          name: '국내상장 해외주식형 ETF',
+          taxTag: '매매차익·분배금 모두 15.4%',
+          tagColor: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+          defaultDivShare: 20,
+          taxableGainFactor: 1.0,
+        },
+        {
+          id: 'mixed',
+          name: '복합 / 자산배분 ETF',
+          taxTag: '분배금 15.4% · 차익 70% 과세',
+          tagColor: 'bg-indigo-50 text-indigo-700 border-indigo-200',
+          defaultDivShare: 35,
+          taxableGainFactor: 0.7,
+        },
+        {
+          id: 'bond',
+          name: '채권형 ETF',
+          taxTag: '이자·매매차익 모두 15.4%',
+          tagColor: 'bg-amber-50 text-amber-800 border-amber-200',
+          defaultDivShare: 70,
+          taxableGainFactor: 1.0, // becomes 0.0 when directBond is checked
+        },
+        {
+          id: 'reit',
+          name: '리츠 / 고배당 ETF',
+          taxTag: '분배금·매매차익 모두 15.4%',
+          tagColor: 'bg-rose-50 text-rose-700 border-rose-200',
+          defaultDivShare: 70,
+          taxableGainFactor: 1.0,
+        },
+      ];
+
+      // 4 Client Profiles
+      const CLIENT_PROFILES = {
+        workerHigh: {
+          label: '직장인 (총급여 5,500만 초과)',
+          taxCreditRate: 13.2,
+          taxCreditLimit: 600,
+          lumpSum: 0,
+          lumpSumType: 'nonDeducted',
+          annualContribution: 600,
+          currentAge: 45,
+          accYears: 15,
+          accReturn: 7.0,
+          payoutYears: 15,
+          payoutMode: 'equal',
+          targetWithdrawal: 1800,
+          samePayoutReturn: true,
+          payoutReturn: 4.5,
+          nhisType: 'regional',
+          otherIncome: 2400,
+          excessTaxMode: 'auto',
+          reinvestRefund: true,
+        },
+        workerLow: {
+          label: '직장인 (총급여 5,500만 이하)',
+          taxCreditRate: 16.5,
+          taxCreditLimit: 600,
+          lumpSum: 0,
+          lumpSumType: 'nonDeducted',
+          annualContribution: 600,
+          currentAge: 42,
+          accYears: 18,
+          accReturn: 7.0,
+          payoutYears: 15,
+          payoutMode: 'equal',
+          targetWithdrawal: 1800,
+          samePayoutReturn: true,
+          payoutReturn: 4.5,
+          nhisType: 'regional',
+          otherIncome: 1800,
+          excessTaxMode: 'auto',
+          reinvestRefund: true,
+        },
+        housewife: {
+          label: '전업주부 · 피부양자 (세액공제 0%)',
+          taxCreditRate: 0,
+          taxCreditLimit: 0,
+          lumpSum: 5000,
+          lumpSumType: 'nonDeducted',
+          annualContribution: 600,
+          currentAge: 45,
+          accYears: 15,
+          accReturn: 7.0,
+          payoutYears: 15,
+          payoutMode: 'equal',
+          targetWithdrawal: 1800,
+          samePayoutReturn: true,
+          payoutReturn: 4.5,
+          nhisType: 'dependent',
+          otherIncome: 500,
+          excessTaxMode: 'auto',
+          reinvestRefund: false,
+        },
+        wealthy: {
+          label: '자산가 · 혼합납입 (연 1,800만)',
+          taxCreditRate: 13.2,
+          taxCreditLimit: 600,
+          lumpSum: 5000,
+          lumpSumType: 'nonDeducted',
+          annualContribution: 1800,
+          currentAge: 45,
+          accYears: 15,
+          accReturn: 7.0,
+          payoutYears: 15,
+          payoutMode: 'equal',
+          targetWithdrawal: 3600,
+          samePayoutReturn: true,
+          payoutReturn: 4.5,
+          nhisType: 'regional',
+          otherIncome: 2500,
+          excessTaxMode: 'auto',
+          reinvestRefund: true,
+        },
+      };
+
+      const PORTFOLIO_PRESETS = {
+        overseas100: { domestic: 0, overseas: 100, mixed: 0, bond: 0, reit: 0 },
+        domestic100: { domestic: 100, overseas: 0, mixed: 0, bond: 0, reit: 0 },
+        global6040:  { domestic: 10, overseas: 50, mixed: 0, bond: 40, reit: 0 },
+        dividendBond:{ domestic: 0, overseas: 20, mixed: 20, bond: 30, reit: 30 },
+        equal5:      { domestic: 20, overseas: 20, mixed: 20, bond: 20, reit: 20 },
+      };
+
+      /* =========================================================================
+       * 2. APPLICATION STATE
+       * ========================================================================= */
+      function getDefaultState() {
+        return {
+          activeProfile: 'workerHigh',
+          taxCreditRate: 13.2,       // 0 | 13.2 | 16.5
+          taxCreditLimit: 600,       // 만원: 0 | 600 | 900
+          reinvestRefund: true,
+
+          lumpSum: 0,                // 만원
+          lumpSumType: 'nonDeducted',// 'nonDeducted' | 'deducted'
+          annualContribution: 600,   // 만원
+          currentAge: 45,
+          accYears: 15,
+          accReturn: 7.0,            // %
+
+          weights: { domestic: 10, overseas: 50, mixed: 10, bond: 20, reit: 10 },
+          divShares: { domestic: 28, overseas: 20, mixed: 35, bond: 70, reit: 70 },
+          directBond: false,
+
+          payoutYears: 15,
+          payoutMode: 'equal',       // 'equal' | 'fixed'
+          targetWithdrawal: 1800,    // 만원
+          samePayoutReturn: true,
+          payoutReturn: 4.5,         // %
+          nhisType: 'regional',      // 'dependent' | 'regional' | 'employee'
+          otherIncome: 2400,         // 만원
+          excessTaxMode: 'auto',     // 'auto' | 'separate' | 'comprehensive'
+
+          activeChartTab: 'lifecycle',     // 'lifecycle' | 'cashflow' | 'breakdown'
+          activeTableTab: 'decumulation',  // 'decumulation' | 'accumulation'
+        };
+      }
+
+      let state = getDefaultState();
+      let lastResult = null;
+      let chartInstance = null;
+
+      /* =========================================================================
+       * 3. EXACT 2026 KOREAN TAX & NHIS ENGINE
+       * ========================================================================= */
+
+      /**
+       * 2026년 종합소득세 (지방소득세 10% 포함) 산출세액 계산
+       */
+      function calcProgressiveTax(taxableBase) {
+        const base = Math.max(0, Number(taxableBase) || 0);
+        if (base <= 0) return 0;
+        for (let i = 0; i < TAX_BRACKETS_2026.length; i++) {
+          const b = TAX_BRACKETS_2026[i];
+          if (base <= b.limit) {
+            return Math.max(0, base * b.rate - b.deduction);
+          }
+        }
+        return 0;
+      }
+
+      /**
+       * 사적연금 종합소득합산 시 연금소득공제 (소득세법 제47조의2, 최대 900만 원)
+       */
+      function calcPensionIncomeDeduction(pensionGross) {
+        const p = Math.max(0, Number(pensionGross) || 0);
+        if (p <= 3_500_000) return p;
+        if (p <= 7_000_000) return 3_500_000 + (p - 3_500_000) * 0.4;
+        if (p <= 14_000_000) return 4_900_000 + (p - 7_000_000) * 0.2;
+        return Math.min(9_000_000, 6_300_000 + (p - 14_000_000) * 0.1);
+      }
+
+      /**
+       * 금융소득종합과세 추가 세액 (연 2,000만 원 초과분, 비교과세 반영)
+       * 기본 15.4% 원천징수 외 추가로 납부하는 누진세 차액 반환
+       */
+      function calcFinancialExtraTax(finIncome, otherIncome) {
+        if (finIncome <= 20_000_000) return 0;
+        const excess = finIncome - 20_000_000;
+        // 기본공제 150만 원 적용한 타소득 과세표준 추정
+        const baseOther = Math.max(0, otherIncome - 1_500_000);
+        const baseWithExcess = Math.max(0, otherIncome + excess - 1_500_000);
+        const incrementalProgTax = Math.max(0, calcProgressiveTax(baseWithExcess) - calcProgressiveTax(baseOther));
+        const flat154OnExcess = excess * 0.154;
+        return Math.max(0, incrementalProgTax - flat154OnExcess);
+      }
+
+      /**
+       * 일반계좌 금융소득으로 인한 추가 건강보험료 계산 (2026년 8.1348%)
+       */
+      function calcGeneralNHIS(finIncome, otherIncome, nhisType) {
+        let extraNHIS = 0;
+        let dependentLost = false;
+
+        if (nhisType === 'regional') {
+          // 지역가입자: 금융소득 연 1,000만 원 초과 시 금융소득 전액에 건보료 부과
+          if (finIncome > 10_000_000) {
+            extraNHIS = finIncome * NHIS_RATE_2026;
+          }
+        } else if (nhisType === 'dependent') {
+          // 피부양자: 금융소득 + 타 종합소득 합계 연 2,000만 원 초과 시 피부양자 탈락 -> 지역가입자 전환
+          if (finIncome > 0 && (finIncome + otherIncome) > 20_000_000) {
+            dependentLost = true;
+            // 공적연금(타소득)은 50% 반영, 금융소득 100% 반영 (재산건보료 별도)
+            extraNHIS = (finIncome + otherIncome * 0.5) * NHIS_RATE_2026;
+          }
+        } else if (nhisType === 'employee') {
+          // 직장가입자: 보수외소득 연 2,000만 원 초과분에 부과 (금융소득으로 인해 추가된 초과분만 산정)
+          const excessWithFin = Math.max(0, (finIncome + otherIncome) - 20_000_000);
+          const excessWithoutFin = Math.max(0, otherIncome - 20_000_000);
+          const attributedExcess = Math.max(0, excessWithFin - excessWithoutFin);
+          extraNHIS = attributedExcess * NHIS_RATE_2026;
+        }
+
+        return { extraNHIS, dependentLost };
+      }
+
+      /**
+       * 연금저축 사적연금 과세 계산 (1,500만 원 초과 시 분리 16.5% vs 종합과세 비교)
+       */
+      function calcPensionTaxForYear(normalTaxable, age, otherIncome, excessTaxMode) {
+        if (normalTaxable <= 0) {
+          return { tax: 0, method: '원금비과세', compSaved: 0, isOver15M: false };
+        }
+
+        // 연령별 저율 연금소득세율 (지방소득세 포함)
+        let ageRate = 0.055;
+        if (age >= 80) ageRate = 0.033;
+        else if (age >= 70) ageRate = 0.044;
+
+        if (normalTaxable <= 15_000_000) {
+          return {
+            tax: normalTaxable * ageRate,
+            method: `${(ageRate * 100).toFixed(1)}% 저율`,
+            compSaved: 0,
+            isOver15M: false,
+          };
+        }
+
+        // 연 1,500만 원 초과 시: 16.5% 분리과세 vs 종합소득세 합산과세
+        const sepTax = normalTaxable * 0.165;
+
+        const pensionDeduction = calcPensionIncomeDeduction(normalTaxable);
+        const pensionIncomeAmt = Math.max(0, normalTaxable - pensionDeduction);
+
+        const baseWithout = Math.max(0, otherIncome - 1_500_000);
+        const baseWith = Math.max(0, otherIncome + pensionIncomeAmt - 1_500_000);
+        const stdCredit = 77_000; // 표준세액공제 7만 원 + 지방세 10%
+        const taxWithout = otherIncome > 0 ? Math.max(0, calcProgressiveTax(baseWithout) - stdCredit) : 0;
+        const taxWith = Math.max(0, calcProgressiveTax(baseWith) - stdCredit);
+        const compTax = Math.max(0, taxWith - taxWithout);
+
+        if (excessTaxMode === 'separate') {
+          return { tax: sepTax, method: '16.5% 분리', compSaved: 0, isOver15M: true };
+        }
+        if (excessTaxMode === 'comprehensive') {
+          return { tax: compTax, method: '종합과세', compSaved: Math.max(0, sepTax - compTax), isOver15M: true };
+        }
+
+        // 자동 최적화
+        if (compTax < sepTax) {
+          return { tax: compTax, method: '종합과세 유리', compSaved: sepTax - compTax, isOver15M: true };
+        }
+        return { tax: sepTax, method: '16.5% 분리 유리', compSaved: 0, isOver15M: true };
+      }
+
+      /**
+       * 균등 인출(만기 잔액 0원) 연도별 인출액 계산 (당해 수익 반영 직후 기준)
+       */
+      function calcAnnuityWithdrawal(preWithdrawTotal, annualRate, remainingYears) {
+        if (preWithdrawTotal <= 0 || remainingYears <= 0) return 0;
+        if (remainingYears === 1) return preWithdrawTotal;
+        if (Math.abs(annualRate) < 1e-8) return preWithdrawTotal / remainingYears;
+        // PV = W * [1 + (1 - (1+r)^-(n-1)) / r]
+        const factor = 1 + (1 - Math.pow(1 + annualRate, -(remainingYears - 1))) / annualRate;
+        if (!Number.isFinite(factor) || factor <= 0) return preWithdrawTotal / remainingYears;
+        return preWithdrawTotal / factor;
+      }
+
+      /**
+       * 메인 시뮬레이션 실행 함수
+       */
+      function runSimulation(cfg) {
+        const lumpSumKRW = Math.max(0, Number(cfg.lumpSum) || 0) * 10_000;
+        const annualContribKRW = Math.max(0, Number(cfg.annualContribution) || 0) * 10_000;
+        const taxCreditLimitKRW = Math.max(0, Number(cfg.taxCreditLimit) || 0) * 10_000;
+        const taxCreditRate = Math.max(0, Number(cfg.taxCreditRate) || 0) / 100;
+        const otherIncomeKRW = Math.max(0, Number(cfg.otherIncome) || 0) * 10_000;
+        const targetWithdrawalKRW = Math.max(0, Number(cfg.targetWithdrawal) || 0) * 10_000;
+
+        const accYears = Math.max(1, Math.round(cfg.accYears));
+        const payoutYears = Math.max(1, Math.round(cfg.payoutYears));
+        const currentAge = Math.max(20, Math.round(cfg.currentAge));
+        const startAge = currentAge + accYears;
+
+        const rAcc = Math.max(0, Number(cfg.accReturn) || 0) / 100;
+        const rPay = cfg.samePayoutReturn ? rAcc : Math.max(0, Number(cfg.payoutReturn) || 0) / 100;
+
+        // Normalize weights safely so total is always 1.0 (zero NaN guarantee)
+        const rawWeightSum = ASSET_META.reduce((s, a) => s + Math.max(0, Number(cfg.weights[a.id]) || 0), 0);
+        const normWeights = {};
+        ASSET_META.forEach((a) => {
+          normWeights[a.id] = rawWeightSum > 0
+            ? Math.max(0, Number(cfg.weights[a.id]) || 0) / rawWeightSum
+            : 0.2;
+        });
+
+        // Asset parameters
+        const assetParams = ASSET_META.map((a) => ({
+          id: a.id,
+          weight: normWeights[a.id],
+          divShare: Math.min(1, Math.max(0, (Number(cfg.divShares[a.id]) || 0) / 100)),
+          taxableGainFactor: (a.id === 'bond' && cfg.directBond) ? 0.0 : a.taxableGainFactor,
+        }));
+
+        const weightedDivShare = assetParams.reduce((s, p) => s + p.weight * p.divShare, 0);
+        const genEffectivePayoutRate = rPay * (1 - 0.154 * weightedDivShare);
+
+        /* ---------- Initialize Account Buckets ---------- */
+        // General Account (5 buckets)
+        const genBuckets = assetParams.map((p) => ({
+          ...p,
+          costBasis: lumpSumKRW * p.weight,
+          value: lumpSumKRW * p.weight,
+        }));
+
+        // Pension Savings Account (3 tax pools)
+        let penNonDeducted = cfg.lumpSumType === 'nonDeducted' ? lumpSumKRW : 0;
+        let penDeducted = cfg.lumpSumType === 'deducted' ? lumpSumKRW : 0;
+        let penGains = 0;
+
+        // Tax credit refund tracking
+        let totalTaxCreditRefund = 0;
+        let refundReinvestBal = 0;
+
+        // Tracking arrays & accumulators
+        const accRows = [];
+        const decRows = [];
+        const lifecycleSeries = [];
+
+        // Initial point (Year 0)
+        const initBal = lumpSumKRW;
+        lifecycleSeries.push({
+          label: `${currentAge}세 (시작)`,
+          age: currentAge,
+          phase: 'start',
+          genBalance: initBal,
+          penBalance: initBal,
+          penWithRefundBalance: initBal,
+        });
+
+        let genAccDivTaxTotal = 0;
+        let genAccExtraFinTaxTotal = 0;
+        let genAccNhisTotal = 0;
+        let totalPrincipalInvested = lumpSumKRW;
+
+        /* =====================================================================
+         * PHASE 1: ACCUMULATION (적립기)
+         * ===================================================================== */
+        for (let yr = 1; yr <= accYears; yr++) {
+          const age = currentAge + yr;
+          totalPrincipalInvested += annualContribKRW;
+
+          // --- General Account Accumulation ---
+          let yrGenGrossDiv = 0;
+          let yrGenDivTax = 0;
+
+          genBuckets.forEach((b) => {
+            const addAmt = annualContribKRW * b.weight;
+            b.costBasis += addAmt;
+            b.value += addAmt;
+
+            const grossDiv = b.value * (rAcc * b.divShare);
+            const capGain = b.value * (rAcc * (1 - b.divShare));
+            const divWithhold = grossDiv * 0.154;
+            const netDiv = grossDiv - divWithhold;
+
+            yrGenGrossDiv += grossDiv;
+            yrGenDivTax += divWithhold;
+
+            // Reinvest after-tax dividend into BOTH costBasis and value (no double taxation)
+            b.costBasis += netDiv;
+            b.value += netDiv + capGain;
+          });
+
+          // Check financial income comprehensive tax during accumulation (> 20M dividends alone)
+          const yrGenExtraFinTax = calcFinancialExtraTax(yrGenGrossDiv, 0);
+          // Deduct extra tax proportionally from general account if > 0
+          const genPreExtraTotal = genBuckets.reduce((s, b) => s + b.value, 0);
+          if (yrGenExtraFinTax > 0 && genPreExtraTotal > 0) {
+            const shrink = Math.max(0, (genPreExtraTotal - yrGenExtraFinTax) / genPreExtraTotal);
+            genBuckets.forEach((b) => {
+              b.value *= shrink;
+            });
+          }
+
+          genAccDivTaxTotal += yrGenDivTax;
+          genAccExtraFinTaxTotal += yrGenExtraFinTax;
+
+          const genEndBal = genBuckets.reduce((s, b) => s + b.value, 0);
+
+          // --- Pension Account Accumulation ---
+          const deductedThisYr = taxCreditRate > 0 ? Math.min(annualContribKRW, taxCreditLimitKRW) : 0;
+          const nonDeductedThisYr = Math.max(0, annualContribKRW - deductedThisYr);
+
+          penDeducted += deductedThisYr;
+          penNonDeducted += nonDeductedThisYr;
+
+          const penPreGrowth = penNonDeducted + penDeducted + penGains;
+          const penYearGain = penPreGrowth * rAcc;
+          penGains += penYearGain;
+
+          const yrRefund = deductedThisYr * taxCreditRate;
+          totalTaxCreditRefund += yrRefund;
+
+          // Reinvested refund bucket compounds at same return (net of 15.4% dividend drag approx or same rAcc)
+          if (cfg.reinvestRefund) {
+            refundReinvestBal = refundReinvestBal * (1 + rAcc) + yrRefund;
+          }
+
+          const penEndBal = penNonDeducted + penDeducted + penGains;
+
+          accRows.push({
+            yr,
+            age,
+            annualContrib: annualContribKRW,
+            cumPrincipal: totalPrincipalInvested,
+            genGrossDiv: yrGenGrossDiv,
+            genTaxPaid: yrGenDivTax + yrGenExtraFinTax,
+            genEndBal,
+            penTaxRefund: yrRefund,
+            penEndBal,
+            penWithRefundBal: penEndBal + (cfg.reinvestRefund ? refundReinvestBal : 0),
+            diffBal: penEndBal - genEndBal,
+          });
+
+          lifecycleSeries.push({
+            label: `${age}세`,
+            age,
+            phase: 'acc',
+            genBalance: genEndBal,
+            penBalance: penEndBal,
+            penWithRefundBalance: penEndBal + (cfg.reinvestRefund ? refundReinvestBal : 0),
+          });
+        }
+
+        const genRetireBal = genBuckets.reduce((s, b) => s + b.value, 0);
+        const penRetireBal = penNonDeducted + penDeducted + penGains;
+        const refundRetireBal = cfg.reinvestRefund ? refundReinvestBal : 0;
+
+        /* =====================================================================
+         * PHASE 2: DECUMULATION (인출기)
+         * ===================================================================== */
+        let genTotalGrossW = 0;
+        let genTotalNetW = 0;
+        let genDecDivTaxTotal = 0;
+        let genDecGainTaxTotal = 0;
+        let genDecExtraFinTaxTotal = 0;
+        let genDecNhisTotal = 0;
+        let genDependentLostYears = 0;
+        let genFirstDependentLostAge = null;
+        let genOver20MYears = 0;
+
+        let penTotalGrossW = 0;
+        let penTotalNetW = 0;
+        let penTotalTax = 0;
+        let penTotalTaxFreeW = 0;
+        let penTaxFreeYears = 0;
+        let penOver15MYears = 0;
+        let penOverLimitYears = 0;
+        let penCompSavedTotal = 0;
+        let refundTotalNetPayout = 0;
+
+        for (let yr = 1; yr <= payoutYears; yr++) {
+          const age = startAge + yr - 1;
+          const remYears = payoutYears - yr + 1;
+
+          /* --- A. General Account Decumulation --- */
+          let yrGenGrossDiv = 0;
+          let yrGenDivWithhold = 0;
+
+          genBuckets.forEach((b) => {
+            if (b.value <= 0) return;
+            const grossDiv = b.value * (rPay * b.divShare);
+            const capGain = b.value * (rPay * (1 - b.divShare));
+            const divTax = grossDiv * 0.154;
+            const netDiv = grossDiv - divTax;
+
+            yrGenGrossDiv += grossDiv;
+            yrGenDivWithhold += divTax;
+
+            b.costBasis += netDiv;
+            b.value += netDiv + capGain;
+          });
+
+          const genPreWTotal = genBuckets.reduce((s, b) => s + b.value, 0);
+          let genGrossW = 0;
+          if (genPreWTotal > 0) {
+            if (cfg.payoutMode === 'equal') {
+              genGrossW = calcAnnuityWithdrawal(genPreWTotal, genEffectivePayoutRate, remYears);
+            } else {
+              genGrossW = Math.min(targetWithdrawalKRW, genPreWTotal);
+            }
+          }
+
+          let yrGenTaxableRealizedGain = 0;
+          if (genGrossW > 0 && genPreWTotal > 0) {
+            const sellRatio = Math.min(1, genGrossW / genPreWTotal);
+            genBuckets.forEach((b) => {
+              const soldAmt = b.value * sellRatio;
+              const soldCost = b.costBasis * sellRatio;
+              const realizedGain = Math.max(0, soldAmt - soldCost);
+              yrGenTaxableRealizedGain += realizedGain * b.taxableGainFactor;
+
+              b.value = Math.max(0, b.value - soldAmt);
+              b.costBasis = Math.max(0, b.costBasis - soldCost);
+            });
+          }
+
+          const yrGenFinIncome = yrGenGrossDiv + yrGenTaxableRealizedGain;
+          const yrGenGainWithhold = yrGenTaxableRealizedGain * 0.154;
+          const yrGenExtraFinTax = calcFinancialExtraTax(yrGenFinIncome, otherIncomeKRW);
+          const nhisRes = calcGeneralNHIS(yrGenFinIncome, otherIncomeKRW, cfg.nhisType);
+          const yrGenNHIS = nhisRes.extraNHIS;
+
+          if (nhisRes.dependentLost) {
+            genDependentLostYears++;
+            if (genFirstDependentLostAge === null) genFirstDependentLostAge = age;
+          }
+          if (yrGenFinIncome > 20_000_000) genOver20MYears++;
+
+          // Cash received: divWithhold was already taken inside account before withdrawal
+          const genNetW = Math.max(0, genGrossW - yrGenGainWithhold - yrGenExtraFinTax - yrGenNHIS);
+          const genEndBal = genBuckets.reduce((s, b) => s + b.value, 0);
+
+          genTotalGrossW += genGrossW;
+          genTotalNetW += genNetW;
+          genDecDivTaxTotal += yrGenDivWithhold;
+          genDecGainTaxTotal += yrGenGainWithhold;
+          genDecExtraFinTaxTotal += yrGenExtraFinTax;
+          genDecNhisTotal += yrGenNHIS;
+
+          /* --- B. Pension Savings Account Decumulation --- */
+          const penStartBal = penNonDeducted + penDeducted + penGains;
+          // 법정 연금수령한도 (1~10년차: 연초잔액 / (11 - 연차) * 1.2, 11년차부터 무제한)
+          const statutoryLimit = yr <= 10 ? (penStartBal / (11 - yr)) * 1.2 : Infinity;
+
+          // Apply year's return
+          const penYrGain = penStartBal * rPay;
+          penGains += penYrGain;
+
+          const penPreWTotal = penNonDeducted + penDeducted + penGains;
+          let penGrossW = 0;
+          if (penPreWTotal > 0) {
+            if (cfg.payoutMode === 'equal') {
+              penGrossW = calcAnnuityWithdrawal(penPreWTotal, rPay, remYears);
+            } else {
+              penGrossW = Math.min(targetWithdrawalKRW, penPreWTotal);
+            }
+          }
+
+          // 법정 인출 순서: 1) 세액공제 미공제 원금 (비과세 0%) -> 2) 공제 원금 + 운용수익 (과세)
+          const taxFreeW = Math.min(penGrossW, penNonDeducted);
+          penNonDeducted = Math.max(0, penNonDeducted - taxFreeW);
+
+          const taxableW = Math.max(0, penGrossW - taxFreeW);
+          const fromDeducted = Math.min(taxableW, penDeducted);
+          penDeducted = Math.max(0, penDeducted - fromDeducted);
+          const fromGains = Math.max(0, taxableW - fromDeducted);
+          penGains = Math.max(0, penGains - fromGains);
+
+          // Check age < 55 penalty or statutory 연금수령한도 excess
+          let overLimitAmt = 0;
+          let overLimitReason = '';
+          if (age < 55 && taxableW > 0) {
+            overLimitAmt = taxableW;
+            overLimitReason = '55세미만 16.5%';
+          } else if (taxableW > statutoryLimit) {
+            overLimitAmt = taxableW - statutoryLimit;
+            overLimitReason = '한도초과 16.5%';
+          }
+
+          if (overLimitAmt > 1) penOverLimitYears++;
+
+          const overLimitTax = overLimitAmt * 0.165;
+          const normalTaxable = Math.max(0, taxableW - overLimitAmt);
+
+          const penTaxObj = calcPensionTaxForYear(normalTaxable, age, otherIncomeKRW, cfg.excessTaxMode);
+          const yrPenTax = overLimitTax + penTaxObj.tax;
+          const penNetW = Math.max(0, penGrossW - yrPenTax);
+          const penEndBal = penNonDeducted + penDeducted + penGains;
+
+          if (taxFreeW > 0 && taxableW <= 1) penTaxFreeYears++;
+          if (penTaxObj.isOver15M) penOver15MYears++;
+          penCompSavedTotal += penTaxObj.compSaved;
+
+          penTotalGrossW += penGrossW;
+          penTotalNetW += penNetW;
+          penTotalTax += yrPenTax;
+          penTotalTaxFreeW += taxFreeW;
+
+          // Reinvested refund payout during decumulation (if ON)
+          let yrRefundPayout = 0;
+          if (cfg.reinvestRefund && refundReinvestBal > 0) {
+            refundReinvestBal *= (1 + rPay);
+            yrRefundPayout = calcAnnuityWithdrawal(refundReinvestBal, rPay, remYears);
+            refundReinvestBal = Math.max(0, refundReinvestBal - yrRefundPayout);
+            refundTotalNetPayout += yrRefundPayout;
+          }
+
+          // Badges for table clarity
+          const badges = [];
+          if (taxFreeW > 0 && taxableW <= 1) {
+            badges.push({ text: '원금비과세', cls: 'bg-emerald-100 text-emerald-800' });
+          } else if (taxFreeW > 0 && taxableW > 1) {
+            badges.push({ text: '원금일부비과세', cls: 'bg-teal-100 text-teal-800' });
+          }
+          if (overLimitReason) {
+            badges.push({ text: overLimitReason, cls: 'bg-rose-100 text-rose-700' });
+          }
+          if (penTaxObj.isOver15M) {
+            badges.push({ text: `1,500만초과(${penTaxObj.method})`, cls: 'bg-amber-100 text-amber-800' });
+          }
+          if (yrGenFinIncome > 20_000_000) {
+            badges.push({ text: '일반 금소세초과', cls: 'bg-blue-100 text-blue-800' });
+          }
+          if (nhisRes.dependentLost) {
+            badges.push({ text: '피부양자 탈락위험', cls: 'bg-rose-600 text-white' });
+          } else if (yrGenNHIS > 0) {
+            badges.push({ text: '일반 건보료추가', cls: 'bg-orange-100 text-orange-800' });
+          }
+
+          decRows.push({
+            yr,
+            age,
+            // General
+            genGrossW,
+            genFinIncome: yrGenFinIncome,
+            genDivTax: yrGenDivWithhold,
+            genGainAndExtraTax: yrGenGainWithhold + yrGenExtraFinTax,
+            genTotalTax: yrGenDivWithhold + yrGenGainWithhold + yrGenExtraFinTax,
+            genNHIS: yrGenNHIS,
+            genNetW,
+            genEndBal,
+            genDependentLost: nhisRes.dependentLost,
+            // Pension
+            penGrossW,
+            penTaxFreeW: taxFreeW,
+            penTaxableW: taxableW,
+            penTax: yrPenTax,
+            penTaxMethod: overLimitReason ? overLimitReason : penTaxObj.method,
+            penNetW,
+            penEndBal,
+            yrRefundPayout,
+            // Diff
+            netDiff: penNetW - genNetW,
+            badges,
+          });
+
+          lifecycleSeries.push({
+            label: `${age + 1}세`,
+            age: age + 1,
+            phase: 'dec',
+            genBalance: genEndBal,
+            penBalance: penEndBal,
+            penWithRefundBalance: penEndBal + (cfg.reinvestRefund ? refundReinvestBal : 0),
+          });
+        }
+
+        // Remaining final balances (in fixed-target mode where balance wasn't fully depleted)
+        const genFinalRemBal = genBuckets.reduce((s, b) => s + b.value, 0);
+        const penFinalRemBal = penNonDeducted + penDeducted + penGains;
+
+        // Totals & Effective Benefit Comparisons
+        const genTotalTaxAll = genAccDivTaxTotal + genAccExtraFinTaxTotal + genDecDivTaxTotal + genDecGainTaxTotal + genDecExtraFinTaxTotal;
+        const genTotalNhisAll = genAccNhisTotal + genDecNhisTotal;
+        const genTotalLeakAll = genTotalTaxAll + genTotalNhisAll;
+
+        const penTotalLeakAll = penTotalTax; // NHIS is always 0
+
+        // Tax credit benefit value (reinvested compounded payout if ON, else nominal cumulative refund)
+        const refundBenefitValue = cfg.reinvestRefund ? refundTotalNetPayout : totalTaxCreditRefund;
+
+        // Total realized economic value (Net payouts + remaining end balance)
+        const genTotalValue = genTotalNetW + genFinalRemBal;
+        const penPureTotalValue = penTotalNetW + penFinalRemBal;
+        const penEffectiveTotalValue = penPureTotalValue + refundBenefitValue;
+
+        const pureDiff = penPureTotalValue - genTotalValue;
+        const effectiveDiff = penEffectiveTotalValue - genTotalValue;
+
+        return {
+          cfg,
+          startAge,
+          totalPrincipalInvested,
+          genRetireBal,
+          penRetireBal,
+          refundRetireBal,
+          genFinalRemBal,
+          penFinalRemBal,
+
+          genTotalGrossW,
+          genTotalNetW,
+          genAccDivTaxTotal,
+          genAccExtraFinTaxTotal,
+          genDecDivTaxTotal,
+          genDecGainTaxTotal,
+          genDecExtraFinTaxTotal,
+          genTotalTaxAll,
+          genTotalNhisAll,
+          genTotalLeakAll,
+          genDependentLostYears,
+          genFirstDependentLostAge,
+          genOver20MYears,
+
+          penTotalGrossW,
+          penTotalNetW,
+          penTotalTax,
+          penTotalLeakAll,
+          penTotalTaxFreeW,
+          penTaxFreeYears,
+          penOver15MYears,
+          penOverLimitYears,
+          penCompSavedTotal,
+
+          totalTaxCreditRefund,
+          refundBenefitValue,
+          genTotalValue,
+          penPureTotalValue,
+          penEffectiveTotalValue,
+          pureDiff,
+          effectiveDiff,
+
+          accRows,
+          decRows,
+          lifecycleSeries,
+          normWeights,
+        };
+      }
+
+      /* =========================================================================
+       * 4. FORMATTING UTILITIES
+       * ========================================================================= */
+      function toMan(krw) {
+        return Math.round((Number(krw) || 0) / 10_000);
+      }
+
+      function fmtMan(krw, withUnit = true) {
+        const man = toMan(krw);
+        const absMan = Math.abs(man);
+        const sign = man < 0 ? '-' : '';
+        if (absMan >= 10_000) {
+          const eok = Math.floor(absMan / 10_000);
+          const rem = absMan % 10_000;
+          const remStr = rem > 0 ? ` ${rem.toLocaleString('ko-KR')}` : '';
+          return `${sign}${eok}억${remStr}${withUnit ? '만 원' : ''}`;
+        }
+        return `${sign}${absMan.toLocaleString('ko-KR')}${withUnit ? '만 원' : ''}`;
+      }
+
+      function fmtManCompact(krw) {
+        const man = toMan(krw);
+        return `${man.toLocaleString('ko-KR')}`;
+      }
+
+      function fmtSignedMan(krw) {
+        const man = toMan(krw);
+        const prefix = man > 0 ? '+' : '';
+        return `${prefix}${fmtMan(krw)}`;
+      }
+
+      function showToast(msg, type = 'info') {
+        const container = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        const colors = {
+          success: 'bg-emerald-600 text-white',
+          warning: 'bg-amber-600 text-white',
+          info: 'bg-navy text-white',
+        };
+        el.className = `${colors[type] || colors.info} px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold flex items-center gap-2 pointer-events-auto transition-all duration-300 opacity-0 translate-y-2`;
+        el.textContent = msg;
+        container.appendChild(el);
+        requestAnimationFrame(() => {
+          el.classList.remove('opacity-0', 'translate-y-2');
+        });
+        setTimeout(() => {
+          el.classList.add('opacity-0', 'translate-y-2');
+          setTimeout(() => el.remove(), 300);
+        }, 2600);
+      }
+
+      /* =========================================================================
+       * 5. BUILD DYNAMIC ASSET SLIDERS & ACCORDIONS
+       * ========================================================================= */
+      function initAssetControls() {
+        const assetWrap = document.getElementById('assetSlidersContainer');
+        const divWrap = document.getElementById('divShareSlidersContainer');
+
+        assetWrap.innerHTML = ASSET_META.map((a) => `
+          <div class="space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-slate-800 truncate">${a.name}</div>
+                <span class="inline-block mt-0.5 px-1.5 py-0.2 rounded border text-[10px] font-medium ${a.tagColor}">${a.taxTag}</span>
+              </div>
+              <div class="relative shrink-0">
+                <input id="inputWeight_${a.id}" data-weight-input="${a.id}" type="number" min="0" max="100" step="5" value="${state.weights[a.id]}" class="w-16 h-8 px-2 pr-5 text-right text-xs font-bold bg-slate-50 border border-slate-300 rounded-lg tabular-nums" />
+                <span class="absolute right-1.5 top-1/2 -translate-y-1/2 text-[11px] text-slate-500">%</span>
+              </div>
+            </div>
+            <input id="sliderWeight_${a.id}" data-weight-slider="${a.id}" type="range" min="0" max="100" step="5" value="${state.weights[a.id]}" class="w-full" />
+          </div>
+        `).join('');
+
+        divWrap.innerHTML = ASSET_META.map((a) => `
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-[11px] font-medium text-slate-700 w-36 truncate">${a.name}</span>
+            <input id="sliderDiv_${a.id}" data-div-slider="${a.id}" type="range" min="0" max="100" step="5" value="${state.divShares[a.id]}" class="flex-1" />
+            <span id="labelDiv_${a.id}" class="text-[11px] font-bold text-slate-800 w-9 text-right tabular-nums">${state.divShares[a.id]}%</span>
+          </div>
+        `).join('');
+
+        // Bind asset weight inputs & sliders
+        ASSET_META.forEach((a) => {
+          const inp = document.getElementById(`inputWeight_${a.id}`);
+          const sld = document.getElementById(`sliderWeight_${a.id}`);
+          const divSld = document.getElementById(`sliderDiv_${a.id}`);
+
+          inp.addEventListener('input', () => {
+            const val = Math.min(100, Math.max(0, Number(inp.value) || 0));
+            state.weights[a.id] = val;
+            sld.value = val;
+            updateWeightIndicator();
+            recalculateAndRender();
+          });
+
+          sld.addEventListener('input', () => {
+            const val = Number(sld.value) || 0;
+            state.weights[a.id] = val;
+            inp.value = val;
+            updateWeightIndicator();
+            recalculateAndRender();
+          });
+
+          divSld.addEventListener('input', () => {
+            const val = Number(divSld.value) || 0;
+            state.divShares[a.id] = val;
+            document.getElementById(`labelDiv_${a.id}`).textContent = `${val}%`;
+            recalculateAndRender();
+          });
+        });
+      }
+
+      function updateWeightIndicator() {
+        const sum = ASSET_META.reduce((s, a) => s + (Number(state.weights[a.id]) || 0), 0);
+        const label = document.getElementById('labelWeightSum');
+        const status = document.getElementById('weightSumStatus');
+        const bar = document.getElementById('weightProgressBar');
+
+        label.textContent = `${sum}%`;
+        bar.style.width = `${Math.min(100, sum)}%`;
+
+        if (sum === 100) {
+          label.className = 'text-sm font-extrabold text-emerald-600 tabular-nums';
+          status.className = 'text-[10px] font-semibold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700';
+          status.textContent = '100% 정상';
+          bar.className = 'h-full bg-emerald-500 transition-all duration-200';
+        } else {
+          label.className = 'text-sm font-extrabold text-amber-600 tabular-nums';
+          status.className = 'text-[10px] font-semibold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800';
+          status.textContent = sum === 0 ? '비중 필요' : `자동비율보정 (${sum > 100 ? '+' : ''}${sum - 100}%)`;
+          bar.className = 'h-full bg-amber-500 transition-all duration-200';
+        }
+      }
+
+      function autoFitWeightsTo100() {
+        const sum = ASSET_META.reduce((s, a) => s + (Number(state.weights[a.id]) || 0), 0);
+        if (sum === 0) {
+          Object.assign(state.weights, PORTFOLIO_PRESETS.equal5);
+        } else {
+          let running = 0;
+          let maxId = ASSET_META[0].id;
+          let maxVal = -1;
+          ASSET_META.forEach((a) => {
+            const scaled = Math.round(((Number(state.weights[a.id]) || 0) / sum) * 100);
+            state.weights[a.id] = scaled;
+            running += scaled;
+            if (scaled > maxVal) {
+              maxVal = scaled;
+              maxId = a.id;
+            }
+          });
+          state.weights[maxId] += (100 - running);
+        }
+        syncUIWithState();
+        recalculateAndRender();
+        showToast('포트폴리오 비중을 100%로 자동 맞춤했습니다.', 'success');
+      }
+
+      /* =========================================================================
+       * 6. SYNC CONTROLS WITH STATE
+       * ========================================================================= */
+      function syncUIWithState() {
+        // Profile buttons
+        document.querySelectorAll('.profile-btn').forEach((btn) => {
+          const active = btn.dataset.profile === state.activeProfile;
+          btn.className = active
+            ? 'profile-btn min-h-[52px] px-2.5 py-2 rounded-xl border-2 border-emerald-600 bg-emerald-50 text-emerald-950 text-left transition flex flex-col justify-center shadow-xs'
+            : 'profile-btn min-h-[52px] px-2.5 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-left transition flex flex-col justify-center';
+        });
+
+        // Tax credit rate buttons
+        document.querySelectorAll('.tax-rate-btn').forEach((btn) => {
+          const active = Number(btn.dataset.taxRate) === Number(state.taxCreditRate);
+          btn.className = active
+            ? 'tax-rate-btn h-9 rounded-lg text-xs font-bold bg-navy text-white shadow-xs transition'
+            : 'tax-rate-btn h-9 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition';
+        });
+
+        // Tax credit limit buttons
+        document.querySelectorAll('.tax-limit-btn').forEach((btn) => {
+          const active = Number(btn.dataset.taxLimit) === Number(state.taxCreditLimit);
+          btn.className = active
+            ? 'tax-limit-btn h-9 rounded-lg text-xs font-bold bg-navy text-white shadow-xs transition'
+            : 'tax-limit-btn h-9 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition';
+        });
+
+        // Reinvest refund toggle & annual refund subtitle
+        document.getElementById('toggleReinvestRefund').checked = state.reinvestRefund;
+        const annualDeducted = state.taxCreditRate > 0 ? Math.min(state.annualContribution, state.taxCreditLimit) : 0;
+        const annualRefundMan = Math.round(annualDeducted * (state.taxCreditRate / 100));
+        document.getElementById('taxCreditSubLabel').textContent = annualRefundMan > 0
+          ? `연 예상 환급액: ${annualRefundMan.toLocaleString('ko-KR')}만 원 (세액공제 ${state.taxCreditRate}%)`
+          : '세액공제 0% (납입 원금 전액 비과세 선인출)';
+
+        // Lump sum & type
+        document.getElementById('inputLumpSum').value = state.lumpSum;
+        document.getElementById('sliderLumpSum').value = Math.min(50000, state.lumpSum);
+        const lumpTypeBox = document.getElementById('lumpSumTypeBox');
+        if (state.lumpSum > 0) {
+          lumpTypeBox.classList.remove('hidden');
+        } else {
+          lumpTypeBox.classList.add('hidden');
+        }
+        document.querySelectorAll('.lump-type-btn').forEach((btn) => {
+          const active = btn.dataset.lumpType === state.lumpSumType;
+          btn.className = active
+            ? 'lump-type-btn h-9 px-2 rounded-lg text-[11px] font-bold border-emerald-600 bg-emerald-600 text-white transition'
+            : 'lump-type-btn h-9 px-2 rounded-lg text-[11px] font-semibold border border-slate-300 bg-white text-slate-700 hover:bg-slate-50 transition';
+        });
+
+        // Annual contribution & limit warning
+        document.getElementById('inputAnnualContrib').value = state.annualContribution;
+        document.getElementById('sliderAnnualContrib').value = Math.min(3000, state.annualContribution);
+        const limitWarn = document.getElementById('annualLimitWarning');
+        if (state.annualContribution > 1800) limitWarn.classList.remove('hidden');
+        else limitWarn.classList.add('hidden');
+
+        // Age & Acc Years & Start Age Banner
+        document.getElementById('sliderCurrentAge').value = state.currentAge;
+        document.getElementById('labelCurrentAge').textContent = state.currentAge;
+        document.getElementById('sliderAccYears').value = state.accYears;
+        document.getElementById('labelAccYears').textContent = state.accYears;
+
+        const startAge = state.currentAge + state.accYears;
+        const startAgeBanner = document.getElementById('startAgeBanner');
+        const labelStartAge = document.getElementById('labelStartAge');
+        if (startAge < 55) {
+          startAgeBanner.className = 'flex items-center justify-between px-3 py-2 rounded-xl bg-amber-50 border border-amber-200 text-xs';
+          labelStartAge.className = 'font-bold text-amber-800 tabular-nums';
+          labelStartAge.textContent = `만 ${startAge}세 (주의: 만 55세 미만 기타소득세 16.5%)`;
+        } else {
+          startAgeBanner.className = 'flex items-center justify-between px-3 py-2 rounded-xl bg-slate-100 text-xs';
+          labelStartAge.className = 'font-bold text-slate-900 tabular-nums';
+          labelStartAge.textContent = `만 ${startAge}세 (연금개시 요건 충족)`;
+        }
+
+        // Returns
+        document.getElementById('sliderAccReturn').value = state.accReturn;
+        document.getElementById('labelAccReturn').textContent = Number(state.accReturn).toFixed(1);
+        document.getElementById('labelMirrorAccReturn').textContent = Number(state.accReturn).toFixed(1);
+
+        document.getElementById('chkSamePayoutReturn').checked = state.samePayoutReturn;
+        const customPayBox = document.getElementById('customPayoutReturnBox');
+        if (state.samePayoutReturn) customPayBox.classList.add('hidden');
+        else customPayBox.classList.remove('hidden');
+        document.getElementById('sliderPayoutReturn').value = state.payoutReturn;
+        document.getElementById('labelPayoutReturn').textContent = Number(state.payoutReturn).toFixed(1);
+
+        // Asset weights & div shares
+        ASSET_META.forEach((a) => {
+          document.getElementById(`inputWeight_${a.id}`).value = state.weights[a.id];
+          document.getElementById(`sliderWeight_${a.id}`).value = state.weights[a.id];
+          document.getElementById(`sliderDiv_${a.id}`).value = state.divShares[a.id];
+          document.getElementById(`labelDiv_${a.id}`).textContent = `${state.divShares[a.id]}%`;
+        });
+        document.getElementById('chkDirectBond').checked = state.directBond;
+        updateWeightIndicator();
+
+        // Payout years & mode
+        document.getElementById('sliderPayoutYears').value = state.payoutYears;
+        document.getElementById('labelPayoutYears').textContent = state.payoutYears;
+        document.querySelectorAll('.payout-yr-btn').forEach((btn) => {
+          const active = Number(btn.dataset.payoutYr) === Number(state.payoutYears);
+          btn.className = active
+            ? 'payout-yr-btn h-8 rounded-lg text-xs font-bold border-navy bg-navy text-white transition'
+            : 'payout-yr-btn h-8 rounded-lg text-xs font-semibold border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition';
+        });
+
+        document.querySelectorAll('.payout-mode-btn').forEach((btn) => {
+          const active = btn.dataset.payoutMode === state.payoutMode;
+          btn.className = active
+            ? 'payout-mode-btn h-11 px-2 rounded-lg text-xs font-bold bg-navy text-white shadow-xs transition leading-tight'
+            : 'payout-mode-btn h-11 px-2 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition leading-tight';
+        });
+
+        const fixedBox = document.getElementById('fixedWithdrawalBox');
+        if (state.payoutMode === 'fixed') fixedBox.classList.remove('hidden');
+        else fixedBox.classList.add('hidden');
+        document.getElementById('inputTargetWithdrawal').value = state.targetWithdrawal;
+        document.getElementById('sliderTargetWithdrawal').value = Math.min(8000, state.targetWithdrawal);
+
+        // NHIS buttons
+        document.querySelectorAll('.nhis-btn').forEach((btn) => {
+          const active = btn.dataset.nhis === state.nhisType;
+          btn.className = active
+            ? 'nhis-btn h-11 rounded-lg text-xs font-bold bg-navy text-white shadow-xs transition leading-tight'
+            : 'nhis-btn h-11 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition leading-tight';
+        });
+
+        // Other income & excess mode
+        document.getElementById('inputOtherIncome').value = state.otherIncome;
+        document.getElementById('sliderOtherIncome').value = Math.min(10000, state.otherIncome);
+        document.getElementById('selectExcessTaxMode').value = state.excessTaxMode;
+
+        // Chart & Table active tabs
+        document.querySelectorAll('.chart-tab-btn').forEach((btn) => {
+          const active = btn.dataset.chartTab === state.activeChartTab;
+          btn.className = active
+            ? 'chart-tab-btn flex-1 sm:flex-none h-9 px-3.5 rounded-lg text-xs font-bold bg-white text-navy shadow-xs transition whitespace-nowrap'
+            : 'chart-tab-btn flex-1 sm:flex-none h-9 px-3.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition whitespace-nowrap';
+        });
+
+        document.querySelectorAll('.table-tab-btn').forEach((btn) => {
+          const active = btn.dataset.tableTab === state.activeTableTab;
+          btn.className = active
+            ? 'table-tab-btn flex-1 sm:flex-none h-9 px-3.5 rounded-lg text-xs font-bold bg-white text-navy shadow-xs transition'
+            : 'table-tab-btn flex-1 sm:flex-none h-9 px-3.5 rounded-lg text-xs font-semibold text-slate-500 hover:text-slate-800 transition';
+        });
+      }
+
+      /* =========================================================================
+       * 7. RENDER DASHBOARD: VERDICT, KPIS, CHARTS, TABLES, PRINT SUMMARY
+       * ========================================================================= */
+      function recalculateAndRender() {
+        try {
+          lastResult = runSimulation(state);
+          renderPrintSummary(lastResult);
+          renderVerdictCard(lastResult);
+          renderKPICards(lastResult);
+          renderActiveChart(lastResult);
+          renderDetailTable(lastResult);
+        } catch (err) {
+          console.error('Simulation error:', err);
+          showToast('시뮬레이션 계산 중 오류가 발생했습니다. 입력값을 확인해주세요.', 'warning');
+        }
+      }
+
+      function renderPrintSummary(res) {
+        const nhisNames = { dependent: '피부양자', regional: '지역가입자', employee: '직장가입자' };
+        const topAssets = ASSET_META
+          .filter((a) => res.normWeights[a.id] > 0.01)
+          .map((a) => `${a.name.replace(' ETF', '')} ${Math.round(res.normWeights[a.id] * 100)}%`)
+          .join(', ');
+
+        document.getElementById('printSummaryBar').innerHTML = `
+          <div><span class="text-slate-500 block">납입 조건</span><b>거치 ${fmtMan(res.cfg.lumpSum * 10000)} / 연 ${fmtMan(res.cfg.annualContribution * 10000)} (${res.cfg.accYears}년)</b></div>
+          <div><span class="text-slate-500 block">세액공제 · 수익률</span><b>공제 ${res.cfg.taxCreditRate}% (한도 ${res.cfg.taxCreditLimit}만) · 연 ${res.cfg.accReturn}%</b></div>
+          <div><span class="text-slate-500 block">인출 · 건보료</span><b>만 ${res.startAge}세 개시 ${res.cfg.payoutYears}년 · ${nhisNames[res.cfg.nhisType]} (타소득 ${res.cfg.otherIncome}만)</b></div>
+          <div><span class="text-slate-500 block">투자 포트폴리오</span><b>${topAssets}</b></div>
+        `;
+      }
+
+      function renderVerdictCard(res) {
+        const card = document.getElementById('verdictCard');
+        const iconWrap = document.getElementById('verdictIconWrap');
+        const badge = document.getElementById('verdictBadge');
+        const subTag = document.getElementById('verdictSubTag');
+        const headline = document.getElementById('verdictHeadline');
+        const pureDiffEl = document.getElementById('verdictPureDiff');
+        const bulletsEl = document.getElementById('diagnosticBullets');
+
+        const isPensionWinner = res.effectiveDiff >= 0;
+        const absDiff = Math.abs(res.effectiveDiff);
+
+        if (isPensionWinner) {
+          card.className = 'rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-teal-50/40 shadow-sm p-4 sm:p-5 transition-colors duration-200 print-break-inside-avoid';
+          iconWrap.className = 'w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm';
+          iconWrap.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`;
+          badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-600 text-white';
+          badge.textContent = '연금저축계좌 우위';
+          headline.innerHTML = `연금저축계좌가 총 <span class="text-emerald-700">${fmtSignedMan(res.effectiveDiff)}</span> 더 유리합니다`;
+        } else {
+          card.className = 'rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-indigo-50/40 shadow-sm p-4 sm:p-5 transition-colors duration-200 print-break-inside-avoid';
+          iconWrap.className = 'w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm';
+          iconWrap.innerHTML = `<svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>`;
+          badge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white';
+          badge.textContent = '일반계좌 우위 (과세 역전 발생)';
+          headline.innerHTML = `일반계좌가 총 <span class="text-blue-700">+${fmtMan(absDiff)}</span> 더 유리합니다`;
+        }
+
+        const refundModeNote = res.totalTaxCreditRefund > 0
+          ? (res.cfg.reinvestRefund ? '세액공제 환급금 재투자 포함 기준' : '세액공제 누적 환급액 포함 기준')
+          : '세액공제 0% (미공제 원금 선인출 적용)';
+        subTag.textContent = refundModeNote;
+
+        pureDiffEl.textContent = `연금 ${fmtSignedMan(res.pureDiff)}`;
+        pureDiffEl.className = res.pureDiff >= 0
+          ? 'text-sm font-extrabold tabular-nums text-emerald-700 mt-0.5'
+          : 'text-sm font-extrabold tabular-nums text-blue-700 mt-0.5';
+
+        // Build 3 Scenario-Specific CPE Diagnostic Bullets
+        const bullets = [];
+
+        // Bullet 1: Tax-free principal OR Tax credit & Compounding
+        if (res.penTotalTaxFreeW > 0) {
+          bullets.push({
+            title: '미공제 원금 선인출 비과세 효과',
+            tone: 'emerald',
+            body: `세액공제를 받지 않은 원금 <b>${fmtMan(res.penTotalTaxFreeW)}</b>이 인출 초반 <b>${res.penTaxFreeYears}년 이상 비과세(0%)</b>로 우선 인출되어 실질 세부담을 크게 낮췄습니다.`,
+          });
+        } else if (res.totalTaxCreditRefund > 0) {
+          bullets.push({
+            title: '세액공제 환급 + 과세이연 복리',
+            tone: 'emerald',
+            body: `적립기 누적 세액공제 환급액 <b>${fmtMan(res.totalTaxCreditRefund)}</b>${res.cfg.reinvestRefund ? ` (재투자 가치 ${fmtMan(res.refundBenefitValue)})` : ''}과 배당세 과세이연으로 은퇴 잔액이 <b>${fmtSignedMan(res.penRetireBal - res.genRetireBal)}</b> 차이납니다.`,
+          });
+        } else {
+          bullets.push({
+            title: '과세이연 복리 성장 차이',
+            tone: 'slate',
+            body: `적립기간 ${res.cfg.accYears}년간 일반계좌 배당소득세(${fmtMan(res.genAccDivTaxTotal)}) 차감 없이 전액 재투자되어 은퇴 시점 잔액이 <b>${fmtSignedMan(res.penRetireBal - res.genRetireBal)}</b> 변동했습니다.`,
+          });
+        }
+
+        // Bullet 2: NHIS Alert OR Domestic ETF Reversal Warning
+        const domesticShare = res.normWeights.domestic + (res.cfg.directBond ? res.normWeights.bond : 0);
+        if (res.genDependentLostYears > 0) {
+          bullets.push({
+            title: '일반계좌 피부양자 탈락 경고!',
+            tone: 'rose',
+            body: `일반계좌 인출 시 <b>만 ${res.genFirstDependentLostAge}세부터 총 ${res.genDependentLostYears}년간</b> 연소득 2,000만 원 초과로 피부양자 탈락 위험! 추가 건보료 추정 <b>${fmtMan(res.genTotalNhisAll)}</b> (연금저축 0원).`,
+          });
+        } else if (res.genTotalNhisAll > 0) {
+          bullets.push({
+            title: '건강보험료 절감 핵심 포인트',
+            tone: 'amber',
+            body: `일반계좌는 금융소득 기준 초과로 2026년 요율(8.1348%) 기준 <b>${fmtMan(res.genTotalNhisAll)}</b>의 추가 건보료가 발생하지만, 연금저축은 <b>전액 0원</b>입니다.`,
+          });
+        } else if (domesticShare >= 0.6) {
+          bullets.push({
+            title: '국내주식형·개별채권 과세 역전 주의',
+            tone: 'blue',
+            body: `비과세 매매차익 비중이 <b>${Math.round(domesticShare * 100)}%</b>로 높습니다. 일반계좌는 매매차익 비과세(0%)이나 연금저축은 수익 전체에 연금소득세가 과세됩니다.`,
+          });
+        } else {
+          bullets.push({
+            title: '해외·채권·배당 ETF 절세 극대화',
+            tone: 'emerald',
+            body: `일반계좌에서 15.4% 과세되는 상품 비중이 높아, 인출기 세금·건보료 총 누수비용을 <b>${fmtMan(Math.max(0, res.genTotalLeakAll - res.penTotalLeakAll))}</b> 절감했습니다.`,
+          });
+        }
+
+        // Bullet 3: 15M Threshold / Limit Excess / Comprehensive Tax Optimization
+        if (res.penOverLimitYears > 0) {
+          bullets.push({
+            title: '연금수령한도(또는 55세) 초과 주의',
+            tone: 'rose',
+            body: `인출 기간 중 <b>${res.penOverLimitYears}개 연도</b>에서 법정 연금수령한도 초과(또는 만 55세 미만 인출)로 16.5% 기타소득세가 적용되었습니다. 인출 기간 연장(10년 이상)을 권장합니다.`,
+          });
+        } else if (res.penOver15MYears > 0) {
+          bullets.push({
+            title: '사적연금 연 1,500만 원 초과 최적화',
+            tone: 'amber',
+            body: `과세 인출액이 연 1,500만 원을 초과한 <b>${res.penOver15MYears}개 연도</b>가 발생했습니다.${res.penCompSavedTotal > 0 ? ` 종합과세 선택 최적화로 16.5% 분리 대비 <b>${fmtMan(res.penCompSavedTotal)}</b>을 추가 절세했습니다.` : ' 타 종합소득 구간을 고려해 16.5% 분리과세 전략이 적용되었습니다.'}`,
+          });
+        } else {
+          bullets.push({
+            title: '연 1,500만 원 이하 저율과세 완벽 구간',
+            tone: 'emerald',
+            body: `전 인출 기간 사적연금 과세 인출액이 연 1,500만 원 이하로 유지되어 <b>5.5% → 4.4%(70세) → 3.3%(80세)</b> 저율 분리과세 혜택을 온전히 누립니다.`,
+          });
+        }
+
+        const toneMap = {
+          emerald: 'bg-white/90 border-emerald-200/80 text-emerald-900',
+          blue: 'bg-white/90 border-blue-200/80 text-blue-900',
+          amber: 'bg-amber-50/90 border-amber-200 text-amber-950',
+          rose: 'bg-rose-50/90 border-rose-200 text-rose-950',
+          slate: 'bg-white/90 border-slate-200 text-slate-900',
+        };
+
+        bulletsEl.innerHTML = bullets.map((b) => `
+          <div class="rounded-xl border p-3 ${toneMap[b.tone] || toneMap.slate}">
+            <div class="text-xs font-extrabold mb-1">${b.title}</div>
+            <p class="text-[11.5px] leading-relaxed text-slate-700">${b.body}</p>
+          </div>
+        `).join('');
+      }
+
+      function renderKPICards(res) {
+        // KPI 1: 은퇴시점 계좌잔액
+        document.getElementById('kpi1AgeBadge').textContent = `만 ${res.startAge}세`;
+        document.getElementById('kpiPenRetireBal').textContent = fmtMan(res.penRetireBal);
+        document.getElementById('kpiGenRetireBal').textContent = fmtMan(res.genRetireBal);
+        const retireDiff = res.penRetireBal - res.genRetireBal;
+        const kpiRetireDiff = document.getElementById('kpiRetireDiff');
+        kpiRetireDiff.textContent = `과세이연 복리 차이: ${fmtSignedMan(retireDiff)}`;
+        kpiRetireDiff.className = retireDiff >= 0
+          ? 'mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-bold text-emerald-700 tabular-nums'
+          : 'mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-bold text-blue-700 tabular-nums';
+
+        // KPI 2: 총 세후 실수령액
+        document.getElementById('kpi2YearsBadge').textContent = `${res.cfg.payoutYears}년 합계`;
+        document.getElementById('kpiPenNetTotal').textContent = fmtMan(res.penTotalNetW);
+        document.getElementById('kpiGenNetTotal').textContent = fmtMan(res.genTotalNetW);
+        const refundNote = document.getElementById('kpiRefundNote');
+        if (res.totalTaxCreditRefund > 0) {
+          refundNote.innerHTML = `세액공제 포함 실질: <span class="text-emerald-700 font-extrabold">${fmtMan(res.penTotalNetW + res.refundBenefitValue)}</span>`;
+        } else {
+          refundNote.textContent = `순수 실수령 차이: ${fmtSignedMan(res.penTotalNetW - res.genTotalNetW)}`;
+        }
+
+        // KPI 3: 총 세금 + 추가 건보료
+        document.getElementById('kpiPenLeakTotal').textContent = fmtMan(res.penTotalLeakAll);
+        document.getElementById('kpiGenLeakTotal').textContent = fmtMan(res.genTotalLeakAll);
+        const penEffRate = res.penTotalGrossW > 0 ? (res.penTotalLeakAll / res.penTotalGrossW) * 100 : 0;
+        const genEffRate = res.genTotalGrossW > 0 ? (res.genTotalLeakAll / res.genTotalGrossW) * 100 : 0;
+        const leakSaved = res.genTotalLeakAll - res.penTotalLeakAll;
+        const kpiLeakDiff = document.getElementById('kpiLeakDiff');
+        kpiLeakDiff.textContent = `실효부담 연금 ${penEffRate.toFixed(1)}% vs 일반 ${genEffRate.toFixed(1)}% (${leakSaved >= 0 ? '절감 ' : '추가 '}${fmtMan(Math.abs(leakSaved))})`;
+        kpiLeakDiff.className = leakSaved >= 0
+          ? 'mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-bold text-emerald-700 tabular-nums'
+          : 'mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-bold text-rose-600 tabular-nums';
+
+        // KPI 4: 월평균 세후 현금흐름
+        const months = res.cfg.payoutYears * 12;
+        const penMonthly = res.penTotalNetW / months;
+        const genMonthly = res.genTotalNetW / months;
+        document.getElementById('kpiPenMonthly').textContent = `${fmtMan(penMonthly)}/월`;
+        document.getElementById('kpiGenMonthly').textContent = `${fmtMan(genMonthly)}/월`;
+        const monthlyDiff = penMonthly - genMonthly;
+        const kpiMonthlyDiff = document.getElementById('kpiMonthlyDiff');
+        kpiMonthlyDiff.textContent = `월 생활비 차이: ${fmtSignedMan(monthlyDiff)}/월`;
+        kpiMonthlyDiff.className = monthlyDiff >= 0
+          ? 'mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-bold text-emerald-700 tabular-nums'
+          : 'mt-3 pt-2.5 border-t border-slate-100 text-[11px] font-bold text-blue-700 tabular-nums';
+      }
+
+      /* =========================================================================
+       * 8. CHART.JS RENDERING (3 INTERACTIVE TABS)
+       * ========================================================================= */
+      function renderActiveChart(res) {
+        const ctx = document.getElementById('mainChartCanvas').getContext('2d');
+        if (chartInstance) {
+          chartInstance.destroy();
+          chartInstance = null;
+        }
+
+        const subtitle = document.getElementById('chartSubtitle');
+        Chart.defaults.font.family = "'Pretendard', -apple-system, sans-serif";
+        Chart.defaults.color = '#475569';
+
+        if (state.activeChartTab === 'lifecycle') {
+          subtitle.textContent = `적립기(${res.cfg.accYears}년) + 인출기(${res.cfg.payoutYears}년) 계좌 잔액 추이 · 단위: 만 원`;
+
+          const labels = res.lifecycleSeries.map((d) => d.label);
+          const penData = res.lifecycleSeries.map((d) => toMan(d.penBalance));
+          const genData = res.lifecycleSeries.map((d) => toMan(d.genBalance));
+
+          const datasets = [
+            {
+              label: '연금저축계좌 잔액',
+              data: penData,
+              borderColor: '#059669',
+              backgroundColor: 'rgba(5, 150, 105, 0.10)',
+              borderWidth: 3,
+              fill: true,
+              tension: 0.25,
+              pointRadius: 2,
+              pointHoverRadius: 6,
+            },
+            {
+              label: '일반계좌 잔액',
+              data: genData,
+              borderColor: '#2563EB',
+              backgroundColor: 'rgba(37, 99, 235, 0.06)',
+              borderWidth: 2.5,
+              borderDash: [5, 4],
+              fill: false,
+              tension: 0.25,
+              pointRadius: 2,
+              pointHoverRadius: 6,
+            },
+          ];
+
+          if (res.cfg.reinvestRefund && res.totalTaxCreditRefund > 0) {
+            datasets.splice(1, 0, {
+              label: '연금저축 + 세액공제 환급 재투자',
+              data: res.lifecycleSeries.map((d) => toMan(d.penWithRefundBalance)),
+              borderColor: '#0D9488',
+              borderWidth: 2,
+              borderDash: [2, 2],
+              fill: false,
+              tension: 0.25,
+              pointRadius: 0,
+              pointHoverRadius: 5,
+            });
+          }
+
+          // Vertical line plugin at retirement switch point
+          const retireIndex = res.cfg.accYears;
+          const retireLinePlugin = {
+            id: 'retireMarker',
+            afterDraw(chart) {
+              const xScale = chart.scales.x;
+              const yScale = chart.scales.y;
+              if (!xScale || !yScale) return;
+              const x = xScale.getPixelForValue(retireIndex);
+              if (!Number.isFinite(x)) return;
+              const c = chart.ctx;
+              c.save();
+              c.beginPath();
+              c.setLineDash([4, 4]);
+              c.strokeStyle = '#94A3B8';
+              c.lineWidth = 1.5;
+              c.moveTo(x, yScale.top);
+              c.lineTo(x, yScale.bottom);
+              c.stroke();
+              c.fillStyle = '#0F172A';
+              c.font = 'bold 11px Pretendard, sans-serif';
+              c.textAlign = 'center';
+              c.fillText(`연금개시 (만 ${res.startAge}세)`, x, yScale.top + 12);
+              c.restore();
+            }
+          };
+
+          chartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets },
+            plugins: [retireLinePlugin],
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { mode: 'index', intersect: false },
+              plugins: {
+                legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, padding: 14, font: { size: 12, weight: '600' } } },
+                tooltip: {
+                  backgroundColor: 'rgba(15, 23, 42, 0.94)',
+                  padding: 12,
+                  callbacks: {
+                    label: (item) => ` ${item.dataset.label}: ${Number(item.raw).toLocaleString('ko-KR')}만 원`,
+                  }
+                }
+              },
+              scales: {
+                x: { grid: { display: false }, ticks: { maxTicksLimit: 12, font: { size: 11 } } },
+                y: {
+                  beginAtZero: true,
+                  grid: { color: '#F1F5F9' },
+                  ticks: {
+                    font: { size: 11 },
+                    callback: (v) => v >= 10000 ? `${(v / 10000).toFixed(1)}억` : `${v.toLocaleString('ko-KR')}만`,
+                  }
+                }
+              }
+            }
+          });
+
+        } else if (state.activeChartTab === 'cashflow') {
+          subtitle.textContent = '인출기 연도별 세후 실수령액 vs 세금·건보료 누수 비교 · 단위: 만 원';
+
+          const labels = res.decRows.map((r) => `${r.yr}년차(${r.age}세)`);
+
+          chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: '연금: 비과세 원금 수령',
+                  data: res.decRows.map((r) => toMan(r.penTaxFreeW)),
+                  backgroundColor: '#34D399',
+                  stack: 'pension',
+                  borderRadius: 3,
+                },
+                {
+                  label: '연금: 과세구간 세후 수령',
+                  data: res.decRows.map((r) => toMan(Math.max(0, r.penNetW - r.penTaxFreeW))),
+                  backgroundColor: '#059669',
+                  stack: 'pension',
+                  borderRadius: 3,
+                },
+                {
+                  label: '연금: 세금 (건보료 0)',
+                  data: res.decRows.map((r) => toMan(r.penTax)),
+                  backgroundColor: '#A7F3D0',
+                  stack: 'pension',
+                  borderRadius: 3,
+                },
+                {
+                  label: '일반: 세후 실수령액',
+                  data: res.decRows.map((r) => toMan(r.genNetW)),
+                  backgroundColor: '#2563EB',
+                  stack: 'general',
+                  borderRadius: 3,
+                },
+                {
+                  label: '일반: 인출 세금',
+                  data: res.decRows.map((r) => toMan(r.genGainAndExtraTax)),
+                  backgroundColor: '#F59E0B',
+                  stack: 'general',
+                  borderRadius: 3,
+                },
+                {
+                  label: '일반: 추가 건보료',
+                  data: res.decRows.map((r) => toMan(r.genNHIS)),
+                  backgroundColor: '#E11D48',
+                  stack: 'general',
+                  borderRadius: 3,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { mode: 'index', intersect: false },
+              plugins: {
+                legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, padding: 10, font: { size: 11, weight: '600' } } },
+                tooltip: {
+                  backgroundColor: 'rgba(15, 23, 42, 0.94)',
+                  padding: 12,
+                  callbacks: {
+                    label: (item) => ` ${item.dataset.label}: ${Number(item.raw).toLocaleString('ko-KR')}만 원`,
+                  }
+                }
+              },
+              scales: {
+                x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } },
+                y: {
+                  stacked: true,
+                  beginAtZero: true,
+                  grid: { color: '#F1F5F9' },
+                  ticks: {
+                    font: { size: 11 },
+                    callback: (v) => `${v.toLocaleString('ko-KR')}만`,
+                  }
+                }
+              }
+            }
+          });
+
+        } else {
+          subtitle.textContent = '전 기간(적립기+인출기) 항목별 세금·건보료 및 세액공제 혜택 비교 · 단위: 만 원';
+
+          const labels = [
+            '운용·인출중 배당소득세',
+            '인출시 매매차익/연금세',
+            '금융소득 종합과세 추가분',
+            '추가 건강보험료 (2026)',
+            '세액공제 환급혜택 (플러스)',
+          ];
+
+          const genVals = [
+            toMan(res.genAccDivTaxTotal + res.genDecDivTaxTotal),
+            toMan(res.genDecGainTaxTotal),
+            toMan(res.genAccExtraFinTaxTotal + res.genDecExtraFinTaxTotal),
+            toMan(res.genTotalNhisAll),
+            0,
+          ];
+
+          const penVals = [
+            0,
+            toMan(res.penTotalTax),
+            0,
+            0,
+            toMan(res.refundBenefitValue),
+          ];
+
+          chartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels,
+              datasets: [
+                {
+                  label: '일반계좌',
+                  data: genVals,
+                  backgroundColor: '#2563EB',
+                  borderRadius: 6,
+                  barPercentage: 0.72,
+                },
+                {
+                  label: '연금저축계좌',
+                  data: penVals,
+                  backgroundColor: '#059669',
+                  borderRadius: 6,
+                  barPercentage: 0.72,
+                },
+              ],
+            },
+            options: {
+              indexAxis: 'y',
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { position: 'top', labels: { usePointStyle: true, boxWidth: 8, font: { size: 12, weight: '600' } } },
+                tooltip: {
+                  backgroundColor: 'rgba(15, 23, 42, 0.94)',
+                  padding: 12,
+                  callbacks: {
+                    label: (item) => ` ${item.dataset.label}: ${Number(item.raw).toLocaleString('ko-KR')}만 원`,
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  beginAtZero: true,
+                  grid: { color: '#F1F5F9' },
+                  ticks: { callback: (v) => `${v.toLocaleString('ko-KR')}만` },
+                },
+                y: { grid: { display: false }, ticks: { font: { size: 12, weight: '600' } } }
+              }
+            }
+          });
+        }
+      }
+
+      /* =========================================================================
+       * 9. DETAILED YEAR-BY-YEAR TABLE RENDERING
+       * ========================================================================= */
+      function renderDetailTable(res) {
+        const thead = document.getElementById('detailTableHead');
+        const tbody = document.getElementById('detailTableBody');
+
+        if (state.activeTableTab === 'decumulation') {
+          thead.innerHTML = `
+            <tr>
+              <th class="px-3 py-2.5 text-left font-bold whitespace-nowrap">연차 (나이)</th>
+              <th class="px-2.5 py-2.5 font-bold text-blue-700 whitespace-nowrap">일반 세전인출</th>
+              <th class="px-2.5 py-2.5 font-bold text-blue-700 whitespace-nowrap">일반 과세금융소득</th>
+              <th class="px-2.5 py-2.5 font-bold text-amber-700 whitespace-nowrap">일반 세금+건보</th>
+              <th class="px-2.5 py-2.5 font-bold text-blue-800 whitespace-nowrap bg-blue-50/60">일반 세후수령</th>
+              <th class="px-2.5 py-2.5 font-bold text-emerald-700 whitespace-nowrap">연금 세전인출</th>
+              <th class="px-2.5 py-2.5 font-bold text-emerald-700 whitespace-nowrap">연금 비과세/세금</th>
+              <th class="px-2.5 py-2.5 font-bold text-emerald-800 whitespace-nowrap bg-emerald-50/60">연금 세후수령</th>
+              <th class="px-2.5 py-2.5 font-bold text-slate-800 whitespace-nowrap">연간 차이</th>
+              <th class="px-3 py-2.5 text-left font-bold whitespace-nowrap">세무·건보 진단</th>
+            </tr>
+          `;
+
+          tbody.innerHTML = res.decRows.map((r) => {
+            const genCashLeak = r.genGainAndExtraTax + r.genNHIS;
+            const diffCls = r.netDiff >= 0 ? 'text-emerald-700 font-bold' : 'text-blue-700 font-bold';
+            const badgeHtml = r.badges.length > 0
+              ? r.badges.map((b) => `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold mr-1 mb-0.5 ${b.cls}">${b.text}</span>`).join('')
+              : `<span class="text-[10px] text-slate-400">${r.penTaxMethod}</span>`;
+
+            return `
+              <tr class="hover:bg-slate-50/90 transition-colors">
+                <td class="px-3 py-2.5 text-left font-bold text-slate-800 whitespace-nowrap">${r.yr}년차 <span class="text-slate-400 font-normal">(${r.age}세)</span></td>
+                <td class="px-2.5 py-2.5 text-slate-700 whitespace-nowrap">${fmtManCompact(r.genGrossW)}</td>
+                <td class="px-2.5 py-2.5 text-slate-600 whitespace-nowrap">${fmtManCompact(r.genFinIncome)}</td>
+                <td class="px-2.5 py-2.5 whitespace-nowrap">
+                  <span class="text-amber-700 font-semibold">${fmtManCompact(r.genGainAndExtraTax)}</span>
+                  ${r.genNHIS > 0 ? `<span class="text-rose-600 font-bold"> +${fmtManCompact(r.genNHIS)}</span>` : `<span class="text-slate-300"> +0</span>`}
+                </td>
+                <td class="px-2.5 py-2.5 font-bold text-blue-800 bg-blue-50/30 whitespace-nowrap">${fmtManCompact(r.genNetW)}</td>
+                <td class="px-2.5 py-2.5 text-slate-700 whitespace-nowrap">${fmtManCompact(r.penGrossW)}</td>
+                <td class="px-2.5 py-2.5 whitespace-nowrap">
+                  ${r.penTaxFreeW > 0 ? `<span class="text-teal-700 font-semibold">${fmtManCompact(r.penTaxFreeW)}</span> / ` : ''}
+                  <span class="text-slate-700 font-semibold">${fmtManCompact(r.penTax)}</span>
+                </td>
+                <td class="px-2.5 py-2.5 font-bold text-emerald-800 bg-emerald-50/30 whitespace-nowrap">${fmtManCompact(r.penNetW)}</td>
+                <td class="px-2.5 py-2.5 ${diffCls} whitespace-nowrap">${r.netDiff >= 0 ? '+' : ''}${fmtManCompact(r.netDiff)}</td>
+                <td class="px-3 py-2 text-left min-w-[140px]">${badgeHtml}</td>
+              </tr>
+            `;
+          }).join('') + `
+            <tr class="bg-slate-100 font-extrabold text-slate-900 border-t-2 border-slate-300">
+              <td class="px-3 py-3 text-left whitespace-nowrap">인출기 합계</td>
+              <td class="px-2.5 py-3">${fmtManCompact(res.genTotalGrossW)}</td>
+              <td class="px-2.5 py-3 text-slate-500">-</td>
+              <td class="px-2.5 py-3 text-rose-700">${fmtManCompact(res.genDecGainTaxTotal + res.genDecExtraFinTaxTotal + res.genTotalNhisAll)}</td>
+              <td class="px-2.5 py-3 text-blue-800">${fmtManCompact(res.genTotalNetW)}</td>
+              <td class="px-2.5 py-3">${fmtManCompact(res.penTotalGrossW)}</td>
+              <td class="px-2.5 py-3 text-emerald-800">${fmtManCompact(res.penTotalTax)}</td>
+              <td class="px-2.5 py-3 text-emerald-800">${fmtManCompact(res.penTotalNetW)}</td>
+              <td class="px-2.5 py-3 ${res.penTotalNetW >= res.genTotalNetW ? 'text-emerald-700' : 'text-blue-700'}">${res.penTotalNetW >= res.genTotalNetW ? '+' : ''}${fmtManCompact(res.penTotalNetW - res.genTotalNetW)}</td>
+              <td class="px-3 py-3 text-left text-[11px] font-semibold text-slate-600">${res.totalTaxCreditRefund > 0 ? `세액공제혜택 +${fmtManCompact(res.refundBenefitValue)}만 별도` : '미공제 원금 선인출 완료'}</td>
+            </tr>
+          `;
+        } else {
+          // Accumulation table
+          thead.innerHTML = `
+            <tr>
+              <th class="px-3 py-2.5 text-left font-bold whitespace-nowrap">적립 연차 (나이)</th>
+              <th class="px-2.5 py-2.5 font-bold whitespace-nowrap">연간 납입액</th>
+              <th class="px-2.5 py-2.5 font-bold whitespace-nowrap">누적 납입원금</th>
+              <th class="px-2.5 py-2.5 font-bold text-amber-700 whitespace-nowrap">일반 배당세(연)</th>
+              <th class="px-2.5 py-2.5 font-bold text-blue-800 whitespace-nowrap bg-blue-50/60">일반 연말잔액</th>
+              <th class="px-2.5 py-2.5 font-bold text-emerald-700 whitespace-nowrap">연금 세액공제환급</th>
+              <th class="px-2.5 py-2.5 font-bold text-emerald-800 whitespace-nowrap bg-emerald-50/60">연금 연말잔액</th>
+              <th class="px-3 py-2.5 font-bold text-slate-800 whitespace-nowrap">과세이연 잔액차이</th>
+            </tr>
+          `;
+
+          tbody.innerHTML = res.accRows.map((r) => `
+            <tr class="hover:bg-slate-50/90 transition-colors">
+              <td class="px-3 py-2.5 text-left font-bold text-slate-800 whitespace-nowrap">${r.yr}년차 <span class="text-slate-400 font-normal">(${r.age}세)</span></td>
+              <td class="px-2.5 py-2.5 text-slate-700">${fmtManCompact(r.annualContrib)}</td>
+              <td class="px-2.5 py-2.5 text-slate-600">${fmtManCompact(r.cumPrincipal)}</td>
+              <td class="px-2.5 py-2.5 text-amber-700 font-semibold">${fmtManCompact(r.genTaxPaid)}</td>
+              <td class="px-2.5 py-2.5 font-bold text-blue-800 bg-blue-50/30">${fmtManCompact(r.genEndBal)}</td>
+              <td class="px-2.5 py-2.5 text-emerald-700 font-semibold">${r.penTaxRefund > 0 ? `+${fmtManCompact(r.penTaxRefund)}` : '0'}</td>
+              <td class="px-2.5 py-2.5 font-bold text-emerald-800 bg-emerald-50/30">${fmtManCompact(r.penEndBal)}</td>
+              <td class="px-3 py-2.5 font-bold ${r.diffBal >= 0 ? 'text-emerald-700' : 'text-blue-700'}">${r.diffBal >= 0 ? '+' : ''}${fmtManCompact(r.diffBal)}</td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      /* =========================================================================
+       * 10. SCENARIO SAVE / LOAD (localStorage, up to 6 cases)
+       * ========================================================================= */
+      function getSavedScenarios() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveScenariosToStorage(list) {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+        } catch {
+          showToast('저장 공간에 접근할 수 없습니다.', 'warning');
+        }
+        updateSavedBadge();
+      }
+
+      function updateSavedBadge() {
+        const list = getSavedScenarios();
+        const badge = document.getElementById('savedCountBadge');
+        const modalCount = document.getElementById('modalSavedCount');
+        if (modalCount) modalCount.textContent = list.length;
+        if (list.length > 0) {
+          badge.textContent = list.length;
+          badge.classList.remove('hidden');
+        } else {
+          badge.classList.add('hidden');
+        }
+      }
+
+      function renderScenarioList() {
+        const list = getSavedScenarios();
+        const wrap = document.getElementById('savedScenarioList');
+        updateSavedBadge();
+
+        if (list.length === 0) {
+          wrap.innerHTML = `<div class="py-8 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-xl">저장된 상담 케이스가 없습니다. 위에서 이름을 입력해 저장해보세요.</div>`;
+          return;
+        }
+
+        wrap.innerHTML = list.map((item, idx) => `
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/80 flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="text-xs font-bold text-slate-900 truncate">${escapeHtml(item.name)}</div>
+              <div class="text-[11px] text-slate-500 mt-0.5 truncate">${escapeHtml(item.summary)} · ${item.savedAt}</div>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+              <button type="button" data-load-scenario="${idx}" class="h-8 px-3 rounded-lg bg-navy hover:bg-slate-800 text-white text-xs font-semibold">불러오기</button>
+              <button type="button" data-del-scenario="${idx}" class="h-8 px-2.5 rounded-lg bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 text-xs font-semibold">삭제</button>
+            </div>
+          </div>
+        `).join('');
+
+        wrap.querySelectorAll('[data-load-scenario]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.dataset.loadScenario);
+            const items = getSavedScenarios();
+            if (items[idx] && items[idx].state) {
+              state = { ...getDefaultState(), ...items[idx].state };
+              syncUIWithState();
+              recalculateAndRender();
+              closeScenarioModal();
+              showToast(`'${items[idx].name}' 시나리오를 불러왔습니다.`, 'success');
+            }
+          });
+        });
+
+        wrap.querySelectorAll('[data-del-scenario]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const idx = Number(btn.dataset.delScenario);
+            const items = getSavedScenarios();
+            const removed = items.splice(idx, 1);
+            saveScenariosToStorage(items);
+            renderScenarioList();
+            if (removed[0]) showToast(`'${removed[0].name}' 시나리오를 삭제했습니다.`, 'info');
+          });
+        });
+      }
+
+      function escapeHtml(str) {
+        return String(str || '').replace(/[&<>"']/g, (m) => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        }[m]));
+      }
+
+      function openScenarioModal() {
+        renderScenarioList();
+        const modal = document.getElementById('scenarioModal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+      }
+
+      function closeScenarioModal() {
+        const modal = document.getElementById('scenarioModal');
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+
+      /* =========================================================================
+       * 11. EVENT LISTENERS BINDING
+       * ========================================================================= */
+      function bindEvents() {
+        // Collapsible cards & accordions
+        document.querySelectorAll('[data-collapse]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const targetId = btn.dataset.collapse;
+            const body = document.getElementById(targetId);
+            const chev = document.querySelector(`[data-chevron="${targetId}"]`);
+            if (!body) return;
+            const isHidden = body.classList.toggle('hidden');
+            if (chev) {
+              if (isHidden) chev.classList.remove('rotate-180');
+              else chev.classList.add('rotate-180');
+            }
+          });
+        });
+
+        // Client Profile 1-Tap Presets
+        document.querySelectorAll('.profile-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const key = btn.dataset.profile;
+            const prof = CLIENT_PROFILES[key];
+            if (!prof) return;
+            state.activeProfile = key;
+            Object.assign(state, {
+              taxCreditRate: prof.taxCreditRate,
+              taxCreditLimit: prof.taxCreditLimit,
+              lumpSum: prof.lumpSum,
+              lumpSumType: prof.lumpSumType,
+              annualContribution: prof.annualContribution,
+              currentAge: prof.currentAge,
+              accYears: prof.accYears,
+              accReturn: prof.accReturn,
+              payoutYears: prof.payoutYears,
+              payoutMode: prof.payoutMode,
+              targetWithdrawal: prof.targetWithdrawal,
+              samePayoutReturn: prof.samePayoutReturn,
+              payoutReturn: prof.payoutReturn,
+              nhisType: prof.nhisType,
+              otherIncome: prof.otherIncome,
+              excessTaxMode: prof.excessTaxMode,
+              reinvestRefund: prof.reinvestRefund,
+            });
+            syncUIWithState();
+            recalculateAndRender();
+            showToast(`${prof.label} 프리셋이 적용되었습니다.`, 'success');
+          });
+        });
+
+        // Tax credit rate & limit buttons
+        document.querySelectorAll('.tax-rate-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.taxCreditRate = Number(btn.dataset.taxRate);
+            if (state.taxCreditRate === 0) state.taxCreditLimit = 0;
+            else if (state.taxCreditLimit === 0) state.taxCreditLimit = 600;
+            state.activeProfile = 'custom';
+            syncUIWithState();
+            recalculateAndRender();
+          });
+        });
+
+        document.querySelectorAll('.tax-limit-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.taxCreditLimit = Number(btn.dataset.taxLimit);
+            if (state.taxCreditLimit === 0) state.taxCreditRate = 0;
+            else if (state.taxCreditRate === 0) state.taxCreditRate = 13.2;
+            state.activeProfile = 'custom';
+            syncUIWithState();
+            recalculateAndRender();
+          });
+        });
+
+        document.getElementById('toggleReinvestRefund').addEventListener('change', (e) => {
+          state.reinvestRefund = e.target.checked;
+          recalculateAndRender();
+        });
+
+        // Quick +/- steppers
+        document.querySelectorAll('[data-step]').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const [field, deltaStr] = btn.dataset.step.split(':');
+            const delta = Number(deltaStr);
+            if (field === 'lumpSum') {
+              state.lumpSum = Math.min(50000, Math.max(0, state.lumpSum + delta));
+            } else if (field === 'annualContribution') {
+              state.annualContribution = Math.min(3000, Math.max(0, state.annualContribution + delta));
+            }
+            state.activeProfile = 'custom';
+            syncUIWithState();
+            recalculateAndRender();
+          });
+        });
+
+        // Lump sum input & slider
+        document.getElementById('inputLumpSum').addEventListener('input', (e) => {
+          state.lumpSum = Math.min(50000, Math.max(0, Number(e.target.value) || 0));
+          document.getElementById('sliderLumpSum').value = state.lumpSum;
+          document.getElementById('lumpSumTypeBox').classList.toggle('hidden', state.lumpSum <= 0);
+          state.activeProfile = 'custom';
+          recalculateAndRender();
+        });
+        document.getElementById('sliderLumpSum').addEventListener('input', (e) => {
+          state.lumpSum = Number(e.target.value) || 0;
+          state.activeProfile = 'custom';
+          syncUIWithState();
+          recalculateAndRender();
+        });
+
+        document.querySelectorAll('.lump-type-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.lumpSumType = btn.dataset.lumpType;
+            syncUIWithState();
+            recalculateAndRender();
+          });
+        });
+
+        // Annual contribution input & slider
+        document.getElementById('inputAnnualContrib').addEventListener('input', (e) => {
+          state.annualContribution = Math.min(5000, Math.max(0, Number(e.target.value) || 0));
+          document.getElementById('sliderAnnualContrib').value = Math.min(3000, state.annualContribution);
+          document.getElementById('annualLimitWarning').classList.toggle('hidden', state.annualContribution <= 1800);
+          state.activeProfile = 'custom';
+          recalculateAndRender();
+        });
+        document.getElementById('sliderAnnualContrib').addEventListener('input', (e) => {
+          state.annualContribution = Number(e.target.value) || 0;
+          state.activeProfile = 'custom';
+          syncUIWithState();
+          recalculateAndRender();
+        });
+
+        // Age, accYears, accReturn
+        document.getElementById('sliderCurrentAge').addEventListener('input', (e) => {
+          state.currentAge = Number(e.target.value);
+          syncUIWithState();
+          recalculateAndRender();
+        });
+        document.getElementById('sliderAccYears').addEventListener('input', (e) => {
+          state.accYears = Number(e.target.value);
+          syncUIWithState();
+          recalculateAndRender();
+        });
+        document.getElementById('sliderAccReturn').addEventListener('input', (e) => {
+          state.accReturn = Number(e.target.value);
+          syncUIWithState();
+          recalculateAndRender();
+        });
+
+        // Portfolio presets & auto-fit & direct bond
+        document.querySelectorAll('.port-preset-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            const preset = PORTFOLIO_PRESETS[btn.dataset.portPreset];
+            if (!preset) return;
+            state.weights = { ...preset };
+            syncUIWithState();
+            recalculateAndRender();
+            showToast(`포트폴리오 '${btn.textContent}' 적용 완료`, 'info');
+          });
+        });
+
+        document.getElementById('btnAutoFitWeights').addEventListener('click', autoFitWeightsTo100);
+        document.getElementById('chkDirectBond').addEventListener('change', (e) => {
+          state.directBond = e.target.checked;
+          recalculateAndRender();
+        });
+
+        // Payout controls
+        document.getElementById('sliderPayoutYears').addEventListener('input', (e) => {
+          state.payoutYears = Number(e.target.value);
+          syncUIWithState();
+          recalculateAndRender();
+        });
+        document.querySelectorAll('.payout-yr-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.payoutYears = Number(btn.dataset.payoutYr);
+            syncUIWithState();
+            recalculateAndRender();
+          });
+        });
+        document.querySelectorAll('.payout-mode-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.payoutMode = btn.dataset.payoutMode;
+            syncUIWithState();
+            recalculateAndRender();
+          });
+        });
+        document.getElementById('inputTargetWithdrawal').addEventListener('input', (e) => {
+          state.targetWithdrawal = Math.max(0, Number(e.target.value) || 0);
+          document.getElementById('sliderTargetWithdrawal').value = Math.min(8000, state.targetWithdrawal);
+          recalculateAndRender();
+        });
+        document.getElementById('sliderTargetWithdrawal').addEventListener('input', (e) => {
+          state.targetWithdrawal = Number(e.target.value) || 0;
+          syncUIWithState();
+          recalculateAndRender();
+        });
+
+        document.getElementById('chkSamePayoutReturn').addEventListener('change', (e) => {
+          state.samePayoutReturn = e.target.checked;
+          syncUIWithState();
+          recalculateAndRender();
+        });
+        document.getElementById('sliderPayoutReturn').addEventListener('input', (e) => {
+          state.payoutReturn = Number(e.target.value);
+          syncUIWithState();
+          recalculateAndRender();
+        });
+
+        // NHIS & Other Income & Excess Tax Mode
+        document.querySelectorAll('.nhis-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.nhisType = btn.dataset.nhis;
+            state.activeProfile = 'custom';
+            syncUIWithState();
+            recalculateAndRender();
+          });
+        });
+        document.getElementById('inputOtherIncome').addEventListener('input', (e) => {
+          state.otherIncome = Math.max(0, Number(e.target.value) || 0);
+          document.getElementById('sliderOtherIncome').value = Math.min(10000, state.otherIncome);
+          recalculateAndRender();
+        });
+        document.getElementById('sliderOtherIncome').addEventListener('input', (e) => {
+          state.otherIncome = Number(e.target.value) || 0;
+          syncUIWithState();
+          recalculateAndRender();
+        });
+        document.getElementById('selectExcessTaxMode').addEventListener('change', (e) => {
+          state.excessTaxMode = e.target.value;
+          recalculateAndRender();
+        });
+
+        // Chart Tabs & Table Tabs
+        document.querySelectorAll('.chart-tab-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.activeChartTab = btn.dataset.chartTab;
+            syncUIWithState();
+            if (lastResult) renderActiveChart(lastResult);
+          });
+        });
+        document.querySelectorAll('.table-tab-btn').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            state.activeTableTab = btn.dataset.tableTab;
+            syncUIWithState();
+            if (lastResult) renderDetailTable(lastResult);
+          });
+        });
+
+        // Header Buttons: Scenario Modal, Reset, Print
+        document.getElementById('btnOpenScenarioModal').addEventListener('click', openScenarioModal);
+        document.getElementById('btnCloseScenarioModal').addEventListener('click', closeScenarioModal);
+        document.getElementById('scenarioModal').addEventListener('click', (e) => {
+          if (e.target.id === 'scenarioModal') closeScenarioModal();
+        });
+
+        document.getElementById('btnSaveScenario').addEventListener('click', () => {
+          const inp = document.getElementById('inputScenarioName');
+          const name = inp.value.trim() || `상담 시나리오 ${getSavedScenarios().length + 1}`;
+          const list = getSavedScenarios();
+          if (list.length >= 6) {
+            showToast('최대 6개까지 저장할 수 있습니다. 기존 항목을 삭제 후 저장해주세요.', 'warning');
+            return;
+          }
+          const now = new Date();
+          const savedAt = `${now.getMonth() + 1}/${now.getDate()} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          const summary = `거치 ${state.lumpSum}만 · 연 ${state.annualContribution}만 · ${state.accYears}년적립 · ${state.payoutYears}년인출`;
+          list.unshift({ name, summary, savedAt, state: JSON.parse(JSON.stringify(state)) });
+          saveScenariosToStorage(list);
+          inp.value = '';
+          renderScenarioList();
+          showToast(`'${name}' 시나리오가 저장되었습니다.`, 'success');
+        });
+
+        document.getElementById('btnClearAllScenarios').addEventListener('click', () => {
+          saveScenariosToStorage([]);
+          renderScenarioList();
+          showToast('저장된 모든 시나리오를 삭제했습니다.', 'info');
+        });
+
+        document.getElementById('btnResetAll').addEventListener('click', () => {
+          state = getDefaultState();
+          syncUIWithState();
+          recalculateAndRender();
+          showToast('모든 설정이 기본값으로 초기화되었습니다.', 'info');
+        });
+
+        document.getElementById('btnPrintReport').addEventListener('click', () => {
+          window.print();
+        });
+      }
+
+      /* =========================================================================
+       * 12. BOOTSTRAP ON LOAD
+       * ========================================================================= */
+      window.addEventListener('DOMContentLoaded', () => {
+        initAssetControls();
+        bindEvents();
+        updateSavedBadge();
+        syncUIWithState();
+        recalculateAndRender();
+      });
+    })();
+  </script>
+</body>
+</html>
